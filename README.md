@@ -26,7 +26,7 @@
         <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.5</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.8</span>
                 </div>
                 <h1 class="text-3xl font-black tracking-tight text-white">
                     <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
@@ -59,25 +59,25 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-[#2563eb]"></div>
-                    <span class="text-xs font-bold text-blue-400 uppercase block mb-1">Meas. (Top 3 Avg)</span>
+                    <span class="text-xs font-bold text-blue-400 uppercase block mb-1">Measurement (Top 3)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-m-top3">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-                    <span class="text-xs font-bold text-orange-400 uppercase block mb-1">Meas. (Grand Avg)</span>
+                    <span class="text-xs font-bold text-orange-400 uppercase block mb-1">Measurement (Avg รวม)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-m-avg">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-[#10b981]"></div>
-                    <span class="text-xs font-bold text-emerald-400 uppercase block mb-1">RSSI (Top 3 Avg)</span>
+                    <span class="text-xs font-bold text-emerald-400 uppercase block mb-1">Predict (Top 3)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-r-top3">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-[#db2777]"></div>
-                    <span class="text-xs font-bold text-pink-400 uppercase block mb-1">RSSI (Grand Avg)</span>
+                    <span class="text-xs font-bold text-pink-400 uppercase block mb-1">Predict (Avg รวม)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-r-avg">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
@@ -114,10 +114,10 @@
                             <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800 backdrop-blur-md">
                                 <th class="p-4 w-32">Floor จริง</th>
                                 <th class="p-4">Particle ID</th>
-                                <th class="p-4 bg-blue-950/20 text-blue-400">Meas (Top 3)</th>
-                                <th class="p-4 bg-orange-950/10 text-orange-400">Meas (Avg รวม)</th>
-                                <th class="p-4 bg-emerald-950/20 text-emerald-400">RSSI (Top 3)</th>
-                                <th class="p-4 bg-pink-950/10 text-pink-400">RSSI (Avg รวม)</th>
+                                <th class="p-4 bg-blue-950/20 text-blue-400">Measurement (Top 3)</th>
+                                <th class="p-4 bg-orange-950/10 text-orange-400">Measurement (Avg รวม)</th>
+                                <th class="p-4 bg-emerald-950/20 text-emerald-400">Predict (Top 3)</th>
+                                <th class="p-4 bg-pink-950/10 text-pink-400">Predict (Avg รวม)</th>
                             </tr>
                         </thead>
                         <tbody id="table-output" class="divide-y divide-gray-800/60 code-font"></tbody>
@@ -135,8 +135,8 @@
         const analysisSection = document.getElementById('analysis-section');
         const btnExport = document.getElementById('btn-export');
 
-        // ประกาศตัวแปรเก็บล็อกแบบ Global ไว้นอกขอบเขตฟังก์ชันเพื่อไม่ให้ค่าสูญหาย
-        let globalLogs = []; 
+        // ตัวแปรระดับ Global สำหรับเก็บข้อมูลส่งออก Excel เท่านั้น ห้ามประกาศซ้ำข้างในฟังก์ชันอื่นเด็ดขาด
+        window.globalLogsData = []; 
 
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
@@ -205,8 +205,8 @@
                 return;
             }
 
-            // รีเซ็ตข้อมูลเก็บล็อกระดับ Global ทุกครั้งที่มีการรันข้อมูลใหม่
-            globalLogs = [];
+            // ล้างข้อมูลเก่าออกก่อนเริ่มจัดเก็บชุดใหม่ลงในระดับ Window Context
+            window.globalLogsData = [];
             let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
             
             let detailErrors = {
@@ -263,8 +263,8 @@
                 if (p_r_top3 === "ถูก") counts.rTop3++; else detailErrors[actualFloor].rTop3++;
                 if (p_r_avg === "ถูก") counts.rAvg++; else detailErrors[actualFloor].rAvg++;
 
-                // ผลักออบเจกต์คำตอบเข้าสู่ตัวแปรภายนอกโดยตรง
-                globalLogs.push({
+                // บันทึกเข้า Array ของหน้าต่างหลักโดยตรงเพื่อป้องกันการสูญหายของหน่วยความจำ
+                window.globalLogsData.push({
                     floor: actualFloor, id: mobile.particleId,
                     mTop3: p_m_top3, mAvg: p_m_avg, rTop3: p_r_top3, rAvg: p_r_avg
                 });
@@ -278,7 +278,7 @@
 
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
-            globalLogs.forEach(log => {
+            window.globalLogsData.forEach(log => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/40 transition-colors border-b border-gray-800/50 text-xs sm:text-sm";
                 
@@ -286,7 +286,6 @@
                     ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold' 
                     : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-md font-semibold';
 
-                // ฟังก์ชันแยกสีของ Badge คอลัมน์ Floor จริง
                 let floorBadgeClass = "bg-gray-800 text-gray-300 border border-gray-700";
                 if (log.floor.includes('1')) floorBadgeClass = "bg-red-500/10 text-red-400 border border-red-500/30";
                 else if (log.floor.includes('2')) floorBadgeClass = "bg-orange-500/10 text-orange-400 border border-orange-500/30";
@@ -318,13 +317,13 @@
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
 
-            // ชุดสี High Contrast ที่ต่างกันสุดขั้ว: น้ำเงิน / ส้ม / เขียว / ชมพู
+            // รหัสสีคอนทราสต์ชัดเจน: น้ำเงินสว่าง / ส้มอิฐ / เขียวมรกต / ชมพูเข้มสด
             const themeColors = ['#2563eb', '#ea580c', '#10b981', '#db2777'];
 
             accChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: ['Meas (Top 3)', 'Meas (Avg)', 'RSSI (Top 3)', 'RSSI (Avg)'],
+                    labels: ['Measurement (Top 3)', 'Measurement (Avg)', 'Predict (Top 3)', 'Predict (Avg)'],
                     datasets: [{
                         data: [
                             ((counts.mTop3 / counts.total) * 100),
@@ -342,7 +341,7 @@
                     plugins: { legend: { display: false } },
                     scales: {
                         y: { min: 0, max: 100, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } }
                     }
                 }
             });
@@ -354,25 +353,25 @@
                     labels: floorLabels,
                     datasets: [
                         {
-                            label: 'Meas (Top 3)',
+                            label: 'Measurement 3 ค่า หาร 3',
                             data: floorLabels.map(f => detailErrors[f].mTop3),
                             backgroundColor: themeColors[0],
                             borderRadius: 4
                         },
                         {
-                            label: 'Meas (Avg)',
+                            label: 'Measurement Avg. รวม',
                             data: floorLabels.map(f => detailErrors[f].mAvg),
                             backgroundColor: themeColors[1],
                             borderRadius: 4
                         },
                         {
-                            label: 'RSSI (Top 3)',
+                            label: 'Predict 3 ค่า หาร 3',
                             data: floorLabels.map(f => detailErrors[f].rTop3),
                             backgroundColor: themeColors[2],
                             borderRadius: 4
                         },
                         {
-                            label: 'RSSI (Avg)',
+                            label: 'Predict Avg. รวม',
                             data: floorLabels.map(f => detailErrors[f].rAvg),
                             backgroundColor: themeColors[3],
                             borderRadius: 4
@@ -400,27 +399,28 @@
             });
         }
 
-        // ตัวสคริปต์แก้ไขจุดบกพร่อง ดึงข้อมูล Global สั่งแปลงสเปรดชีต Excel ทันที
+        // ตัวคุมคำสั่งคลิกปุ่มส่งออกแบบปลอดภัย 100% ดึงตัวแปรโดยตรงมาเขียนลงตารางภาษาไทยสอดคล้องเล่มโปรเจกต์
         btnExport.addEventListener('click', () => {
-            if (!globalLogs || globalLogs.length === 0) {
-                alert("ไม่พบข้อมูลที่จะส่งออก กรุณาลากไฟล์ข้อมูลดิบลงในระบบก่อนครับ");
+            if (!window.globalLogsData || window.globalLogsData.length === 0) {
+                alert("ไม่พบข้อมูลสำหรับการส่งออก กรุณาลากไฟล์เข้ามาคำนวณก่อนครับ");
                 return;
             }
             
-            const excelRows = globalLogs.map(item => ({
+            const excelRows = window.globalLogsData.map(item => ({
                 'Floor จริง': item.floor,
                 'Particle ID': item.id,
-                'ผลทำนาย Meas (3 ค่าน้อยสุด)': item.mTop3,
-                'ผลทำนาย Meas (Avg รวมทั้งชั้น)': item.mAvg,
-                'ผลทำนาย RSSI Predict (3 ค่าน้อยสุด)': item.rTop3,
-                'ผลทำนาย RSSI Predict (Avg รวมทั้งชั้น)': item.rAvg
+                'ผลทำนาย Measurement 3 ค่า หาร 3': item.mTop3,
+                'ผลทำนาย Measurement Avg. รวม': item.mAvg,
+                'ผลทำนาย Predict 3 ค่า หาร 3': item.rTop3,
+                'ผลทำนาย Predict Avg. รวม': item.rAvg
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(excelRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN_Prediction_Data");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN_Prediction_Report");
 
-            const maxProps = [18, 15, 28, 28, 28, 28];
+            // ขยายความกว้างของคอลัมน์เพื่อไม่ให้หัวข้อภาษาไทยยาวๆ โดนบีบจนอ่านไม่ออก
+            const maxProps = [18, 15, 38, 38, 38, 38];
             worksheet['!cols'] = maxProps.map(w => ({ w: w }));
 
             XLSX.writeFile(workbook, "KNN_Predict_Dashboard_Report.xlsx");
