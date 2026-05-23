@@ -13,7 +13,7 @@
     <div class="container mx-auto px-4 py-8">
         <header class="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h1 class="text-3xl font-extrabold text-blue-600 mb-2">📊 PSOCalc AI Dashboard</h1>
-            <p class="text-gray-500 text-sm md:text-base">ระบบประมวลผลสมการ KNN คำนวณชั้นภายในอาคารอัตโนมัติ (Measurement vs RSSI Predict)</p>
+            <p class="text-gray-500 text-sm md:text-base">ระบบคำนวณสมการ KNN วิเคราะห์และเปรียบเทียบชั้นอัตโนมัติ (Live Math Engine)</p>
         </header>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
@@ -24,7 +24,7 @@
                 <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden">
                 <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                 <p class="text-sm text-gray-600 font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-gray-400 mt-1">ระบบจะดึงเฉพาะสัญญาณคอลัมน์ C ถึง H ไปคำนวณสมการหาค่า ถูก/ผิด ให้เองทันที</p>
+                <p class="text-xs text-gray-400 mt-1">โยนไฟล์ Excel ที่มีสัญญาณดิบเข้ามาได้เลย ระบบจะคำนวณหาคำตอบให้เองทั้งหมด</p>
             </div>
             <div id="file-info" class="mt-3 text-sm text-blue-600 font-medium hidden text-center"></div>
         </div>
@@ -71,7 +71,7 @@
 
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h3 class="text-base font-bold text-gray-700">📋 ตารางคำนวณผลลัพธ์รายจุดแบบเรียลไทม์โดยระบบ AI Web-Engine</h3>
+                    <h3 class="text-base font-bold text-gray-700">📋 รายงานตารางคำนวณสดรายจุด (Live Calculation Logs)</h3>
                     <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium" id="total-records">0 Particles</span>
                 </div>
                 <div class="overflow-x-auto max-h-96">
@@ -114,7 +114,7 @@
         });
 
         function handleFile(file) {
-            fileInfo.textContent = `ระบบกำลังประมวลผลสมการคณิตศาสตร์และจำลองตำแหน่ง...`;
+            fileInfo.textContent = `ระบบ AI กำลังวิเคราะห์และคำนวณสมการคณิตศาสตร์รายจุด...`;
             fileInfo.classList.remove('hidden');
             
             const reader = new FileReader();
@@ -123,9 +123,10 @@
                 const workbook = XLSX.read(data, {type: 'array'});
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 
-                executeLiveKNN(jsonData);
+                // แปลงไฟล์เป็น Array ดิบแบบ Row-by-Row เพื่อความยืดหยุ่นสูงสุดในการสแกนข้อมูล
+                const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                processLiveKNN(rawRows);
             };
             reader.readAsArrayBuffer(file);
         }
@@ -133,104 +134,131 @@
         let accChart = null;
         let errChart = null;
 
-        function executeLiveKNN(rows) {
-            // กรองเอาแถวข้อมูลจริงคัดแยกส่วนหัวตารางออก
-            let dataRows = rows.filter(r => r[0] && String(r[0]).trim().toLowerCase().startsWith('floor'));
+        function processLiveKNN(rawRows) {
+            // ระบบสแกนอัจฉริยะ: กรองเฉพาะแถวที่มีคอลัมน์แรกระบุชั้น "floor" โดยไม่สนใจแถวหัวตาราง
+            let cleanData = [];
+            rawRows.forEach(row => {
+                if (row && row[0] && String(row[0]).trim().toLowerCase().startsWith('floor')) {
+                    // ล้างค่าช่องว่าง (Trim) ข้อมูลพิกัดชั้นและไอดีประจำจุด
+                    let floorStr = String(row[0]).trim();
+                    let partStr = row[1] ? String(row[1]).trim() : '';
+                    
+                    // ดึงค่าความแรงสัญญาณ AN1, AN2, AN3 แปลงเป็นตัวเลขทศนิยม
+                    let m1 = parseFloat(row[2]) || 0;
+                    let m2 = parseFloat(row[3]) || 0;
+                    let m3 = parseFloat(row[4]) || 0;
+                    let r1 = parseFloat(row[5]) || 0;
+                    let r2 = parseFloat(row[6]) || 0;
+                    let r3 = parseFloat(row[7]) || 0;
+
+                    cleanData.push({
+                        actualFloor: floorStr,
+                        particleId: partStr,
+                        meas: [m1, m2, m3],
+                        rssi: [r1, r2, r3]
+                    });
+                }
+            });
+
+            if (cleanData.length === 0) {
+                fileInfo.textContent = "❌ ไม่พบข้อมูลโครงสร้างชั้นภายในไฟล์ กรุณาตรวจสอบคอลัมน์แรก";
+                return;
+            }
 
             let logs = [];
-            let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: dataRows.length };
+            let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
             let floorErrors = { 'Floor 1': 0, 'Floor 2': 0, 'Floor 3': 0, 'Floor 4': 0 };
 
-            document.getElementById('total-records').textContent = `${dataRows.length} Particles`;
+            document.getElementById('total-records').textContent = `${cleanData.length} Particles`;
 
-            // วนลูปคำนวณสมการรายพิกัด โดยให้ตัวแปรแต่ละแถวเป็น Mobile Unit เพื่อทำนายชั้นแบบสดๆ
-            dataRows.forEach((mobileRow) => {
-                let actualFloor = String(mobileRow[0]).trim(); // ชั้นที่ถูกต้องจริง
-                let particleId = String(mobileRow[1]).trim();  // รหัสไอดีประจำจุด
+            // ลูปคำนวณสมการรายจุดแบบจำลอง Mobile Unit
+            cleanData.forEach((mobile) => {
+                let actualFloor = mobile.actualFloor;
                 
-                // ดึงค่าความแรงสัญญาณดิบจากฟอร์มตาราง Excel
-                let m_an1 = parseFloat(mobileRow[2]) || 0;
-                let m_an2 = parseFloat(mobileRow[3]) || 0;
-                let m_an3 = parseFloat(mobileRow[4]) || 0;
-
-                let r_an1 = parseFloat(mobileRow[5]) || 0;
-                let r_an2 = parseFloat(mobileRow[6]) || 0;
-                let r_an3 = parseFloat(mobileRow[7]) || 0;
-
-                // อาร์เรย์เก็บค่าระยะห่างแยกแต่ละชั้น
                 let mDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
                 let rDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
 
-                // คำนวณ Euclidean Distance เทียบกับกลุ่มข้อมูลประวัติทั้งหมด 55 ตัว
-                dataRows.forEach((targetRow) => {
-                    let targetFloor = String(targetRow[0]).trim();
-                    
-                    let t_m1 = parseFloat(targetRow[2]) || 0;
-                    let t_m2 = parseFloat(targetRow[3]) || 0;
-                    let t_m3 = parseFloat(targetRow[4]) || 0;
+                // คำนวณ Euclidean Distance เทียบกับพิกัดอ้างอิงทั้งหมดในตาราง
+                cleanData.forEach((target) => {
+                    let targetFloor = target.actualFloor;
 
-                    let t_r1 = parseFloat(targetRow[5]) || 0;
-                    let t_r2 = parseFloat(targetRow[6]) || 0;
-                    let t_r3 = parseFloat(targetRow[7]) || 0;
+                    // สูตรขั้นตอนที่ 1: คำนวณระยะห่างทางเรขาคณิต (Euclidean Distance)
+                    let distM = Math.sqrt(
+                        Math.pow(mobile.meas[0] - target.meas[0], 2) +
+                        Math.pow(mobile.meas[1] - target.meas[1], 2) +
+                        Math.pow(mobile.meas[2] - target.meas[2], 2)
+                    );
 
-                    // สูตรคณิตศาสตร์ขั้นตอนที่ 1: SQRT((AN1_PR - AN1_Mobile)^2 + ...)
-                    let d_m = Math.sqrt(Math.pow(m_an1 - t_m1, 2) + Math.pow(m_an2 - t_m2, 2) + Math.pow(m_an3 - t_m3, 2));
-                    let d_r = Math.sqrt(Math.pow(r_an1 - t_r1, 2) + Math.pow(r_an2 - t_r2, 2) + Math.pow(r_an3 - t_r3, 2));
+                    let distR = Math.sqrt(
+                        Math.pow(mobile.rssi[0] - target.rssi[0], 2) +
+                        Math.pow(mobile.rssi[1] - target.rssi[1], 2) +
+                        Math.pow(mobile.rssi[2] - target.rssi[2], 2)
+                    );
 
-                    mDistances[targetFloor].push(d_m);
-                    rDistances[targetFloor].push(d_r);
+                    mDistances[targetFloor].push(distM);
+                    rDistances[targetFloor].push(distR);
                 });
 
-                // ฟังก์ชันย่อยสำหรับประเมินผลหาชั้นที่ให้ระยะห่างน้อยที่สุด
-                function predict(distanceObj, isTop3) {
-                    let floorScores = {};
-                    for (let fl in distanceObj) {
-                        let arr = distanceObj[fl];
-                        if (isTop3) {
-                            // สูตรขั้นตอนที่ 2: กรองค่าที่เป็น 0 ออก (ตัวมันเอง) จากนั้นเลือกมา 3 ค่าน้อยสุดเพื่อหาเฉลี่ย
-                            let filtered = arr.filter(d => d > 0).sort((a, b) => a - b);
-                            floorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 999);
+                // ฟังก์ชันประมวลผลคำตอบ (ทำนายชั้น)
+                function runPrediction(distanceMap, isTop3Mode) {
+                    let finalFloorScores = {};
+                    
+                    for (let fl in distanceMap) {
+                        let dList = distanceMap[fl];
+                        if (isTop3Mode) {
+                            // สูตรขั้นตอนที่ 2: กรองเอาค่าศูนย์ออก (ตัดตัวมันเอง) แล้วเรียงค่าน้อยสุด 3 ค่ามาหาค่าเฉลี่ย
+                            let filtered = dList.filter(v => v > 0).sort((a, b) => a - b);
+                            finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 9999);
                         } else {
-                            // สูตรขั้นตอนที่ 3: หาค่าเฉลี่ยรวมทั้งหมดในชั้นเพื่อนำมาเปรียบเทียบตัวแปร
-                            let sum = arr.reduce((a, b) => a + b, 0);
-                            floorScores[fl] = arr.length > 0 ? (sum / arr.length) : 999;
+                            // สูตรขั้นตอนที่ 3: หาค่าเฉลี่ยรวมระยะทางของทั้งชั้น
+                            let totalSum = dList.reduce((a, b) => a + b, 0);
+                            finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 9999;
                         }
                     }
-                    // ดึงชั้นที่คำนวณแล้วได้ระยะสั้นที่สุด (ใกล้เคียงตำแหน่งจริงที่สุด)
-                    let predictedFloor = Object.keys(floorScores).reduce((a, b) => floorScores[a] < floorScores[b] ? a : b);
-                    return predictedFloor === actualFloor ? "ถูก" : `ชั้น ${predictedFloor.replace('Floor ', '')}`;
+
+                    // คัดเลือกชั้นที่ได้คะแนนเฉลี่ยระยะทางต่ำสุด (ใกล้เคียงที่สุด)
+                    let predicted = Object.keys(finalFloorScores).reduce((a, b) => finalFloorScores[a] < finalFloorScores[b] ? a : b);
+                    
+                    // ปรับแต่งการแสดงผล: ถ้าตรงกับชั้นจริงให้ตอบ "ถูก" ถ้าไม่ตรงให้แสดงเป็น "ชั้น X" ตามที่คุณต้องการ
+                    return predicted === actualFloor ? "ถูก" : `ชั้น ${predicted.replace('Floor ', '')}`;
                 }
 
-                let p_m_top3 = predict(mDistances, true);
-                let p_m_avg  = predict(mDistances, false);
-                let p_r_top3 = predict(rDistances, true);
-                let p_r_avg  = predict(rDistances, false);
+                let p_m_top3 = runPrediction(mDistances, true);
+                let p_m_avg  = runPrediction(mDistances, false);
+                let p_r_top3 = runPrediction(rDistances, true);
+                let p_r_avg  = runPrediction(rDistances, false);
 
                 if (p_m_top3 === "ถูก") counts.mTop3++;
                 if (p_m_avg === "ถูก") counts.mAvg++;
                 if (p_r_top3 === "ถูก") counts.rTop3++;
                 if (p_r_avg === "ถูก") counts.rAvg++;
 
-                // บันทึกสถิติจุดคลาดเคลื่อนสำหรับนำไปจัดหมวดหมู่รายงานวิจัย
+                // บันทึกสถิติจุดทำนายพลาดของโมเดลหลัก (Measurement Top 3) ไปแจกแจงบนกราฟรายงานผล
                 if (p_m_top3 !== "ถูก") {
-                    floorErrors[actualFloor] = (floorErrors[actualFloor] || 0) + 1;
+                    if (actualFloor.includes('1')) floorErrors['Floor 1']++;
+                    else if (actualFloor.includes('2')) floorErrors['Floor 2']++;
+                    else if (actualFloor.includes('3')) floorErrors['Floor 3']++;
+                    else if (actualFloor.includes('4')) floorErrors['Floor 4']++;
                 }
 
                 logs.push({
-                    floor: actualFloor, id: particleId,
-                    mTop3: p_m_top3, mAvg: p_m_avg,
-                    rTop3: p_r_top3, rAvg: p_r_avg
+                    floor: actualFloor,
+                    id: mobile.particleId,
+                    mTop3: p_m_top3,
+                    mAvg: p_m_avg,
+                    rTop3: p_r_top3,
+                    rAvg: p_r_avg
                 });
             });
 
-            // อัปเดตข้อมูลอัตราความแม่นยำรวม (%) ลงบนหน้าเว็บแดชบอร์ด
-            const pct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
-            document.getElementById('acc-m-top3').textContent = pct(counts.mTop3, counts.total);
-            document.getElementById('acc-m-avg').textContent = pct(counts.mAvg, counts.total);
-            document.getElementById('acc-r-top3').textContent = pct(counts.rTop3, counts.total);
-            document.getElementById('acc-r-avg').textContent = pct(counts.rAvg, counts.total);
+            // คำนวณสรุปเปอร์เซ็นต์ความถูกต้องของแต่ละอัลกอริทึม
+            const calcPct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
+            document.getElementById('acc-m-top3').textContent = calcPct(counts.mTop3, counts.total);
+            document.getElementById('acc-m-avg').textContent = calcPct(counts.mAvg, counts.total);
+            document.getElementById('acc-r-top3').textContent = calcPct(counts.rTop3, counts.total);
+            document.getElementById('acc-r-avg').textContent = calcPct(counts.rAvg, counts.total);
 
-            // พิมพ์ผลลัพธ์ลงในตารางรายจุดให้เห็นผลชัดเจนครบถ้วนทั้ง 55 แถว
+            // ฉีดแถวข้อมูลผลลัพธ์ ถูก/ผิด ลงตารางรายงานบนหน้าแดชบอร์ดเว็บ
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
             logs.forEach(log => {
@@ -238,18 +266,18 @@
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-gray-700 border-b">${log.floor}</td>
                     <td class="p-3 text-gray-500 border-b">${log.id}</td>
-                    <td class="p-3 border-b ${log.mTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mTop3}</td>
-                    <td class="p-3 border-b ${log.mAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mAvg}</td>
-                    <td class="p-3 border-b ${log.rTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rTop3}</td>
-                    <td class="p-3 border-b ${log.rAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rAvg}</td>
+                    <td class="p-3 border-b ${log.mTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mTop3}</td>
+                    <td class="p-3 border-b ${log.mAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mAvg}</td>
+                    <td class="p-3 border-b ${log.rTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rTop3}</td>
+                    <td class="p-3 border-b ${log.rAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rAvg}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // วาดกราฟสรุปสถิติเปรียบเทียบประสิทธิภาพแบบไดนามิก
+            // สั่งอัปเดตแผนภูมิแท่งรายงานผลสถิติแบบ Dynamic
             renderCharts(counts, floorErrors);
             analysisSection.classList.remove('hidden');
-            fileInfo.textContent = "✅ คำนวณสมการและวิเคราะห์ข้อมูล IPS เสร็จสมบูรณ์!";
+            fileInfo.textContent = "✅ ประมวลผลสมการ KNN และรายงานสถิติสำเร็จเสร็จสิ้น!";
         }
 
         function renderCharts(counts, errors) {
@@ -259,6 +287,7 @@
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
 
+            // 1. กราฟแท่งแสดงอัตราความแม่นยำรวม (%) ของแต่ละวิธีคำนวณ
             accChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
@@ -281,12 +310,13 @@
                 }
             });
 
+            // 2. กราฟแท่งจำแนกปริมาณจุดคลาดเคลื่อนรายชั้น
             errChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: Object.keys(errors),
                     datasets: [{
-                        label: 'จำนวนจุดที่ทำนายผิดพลาด (จุด)',
+                        label: 'จำนวนจุดที่ทำนายสลับชั้น (จุด)',
                         data: Object.values(errors),
                         backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16']
                     }]
