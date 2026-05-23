@@ -124,7 +124,6 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                // โหลดเป็นตารางแถวตรง ๆ
                 const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 processLiveKNN(rawRows);
             };
@@ -137,17 +136,16 @@
         function processLiveKNN(rawRows) {
             let cleanData = [];
             
-            // วนลูปอ่านข้อมูลข้าม 2 แถวแรกที่เป็นหัวตาราง และเลือกเฉพาะแถวที่มีข้อมูลจริง
+            // วนลูปอ่านเพื่อกรองเอาเฉพาะแถวข้อมูลจริงที่มีคำว่า Floor 1, 2, 3, 4
             for (let i = 0; i < rawRows.length; i++) {
                 let row = rawRows[i];
-                if (row && row[0] && String(row[0]).trim().toLowerCase().startsWith('floor')) {
-                    // ป้องกันแถวที่เป็นข้อความ "Floor" ที่เป็นหัวข้อคอลัมน์ A แถวที่ 1 
-                    if (String(row[1]).trim().toLowerCase().startsWith('particle')) continue;
-
+                if (row && row[0] && String(row[0]).trim().startsWith('Floor')) {
                     let floorStr = String(row[0]).trim();
                     let partStr = row[1] ? String(row[1]).trim() : '';
                     
-                    // แปลงค่าความแรงสัญญาณเป็นตัวเลขให้ปลอดภัย
+                    // ข้ามแถวหัวข้อหลักคอลัมน์ออกไปถ้าเจอข้อความ Particle
+                    if (partStr.toLowerCase().startsWith('particle')) continue;
+
                     let m1 = parseFloat(row[2]);
                     let m2 = parseFloat(row[3]);
                     let m3 = parseFloat(row[4]);
@@ -156,11 +154,178 @@
                     let r2 = parseFloat(row[6]);
                     let r3 = parseFloat(row[7]);
 
-                    // ดักจับ: ถ้าแถวไหนมีค่าความแรงสัญญาณหลุดเป็นตัวอักษร ให้ข้ามทันทีป้องกันระบบค้าง
                     if (isNaN(m1) || isNaN(m2) || isNaN(m3)) continue;
 
                     cleanData.push({
                         actualFloor: floorStr,
                         particleId: partStr,
                         meas: [m1, m2, m3],
-                        rssi:
+                        rssi: [isNaN(r1) ? 0 : r1, isNaN(r2) ? 0 : r2, isNaN(r3) ? 0 : r3]
+                    });
+                }
+            }
+
+            if (cleanData.length === 0) {
+                fileInfo.textContent = "❌ ไม่พบโครงสร้างแถวข้อมูลหรือสัญญาณดิบในไฟล์นี้";
+                return;
+            }
+
+            let logs = [];
+            let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
+            let floorErrors = { 'Floor 1': 0, 'Floor 2': 0, 'Floor 3': 0, 'Floor 4': 0 };
+
+            document.getElementById('total-records').textContent = `${cleanData.length} Particles`;
+
+            // วนลูปประมวลผลอัลกอริทึมคำนวณหาคำตอบรายจุด
+            cleanData.forEach((mobile) => {
+                let actualFloor = mobile.actualFloor;
+                
+                let mDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
+                let rDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
+
+                cleanData.forEach((target) => {
+                    let targetFloor = target.actualFloor;
+
+                    // สูตรขั้นตอนที่ 1: คำนวณ Euclidean Distance
+                    let distM = Math.sqrt(
+                        Math.pow(mobile.meas[0] - target.meas[0], 2) +
+                        Math.pow(mobile.meas[1] - target.meas[1], 2) +
+                        Math.pow(mobile.meas[2] - target.meas[2], 2)
+                    );
+
+                    let distR = Math.sqrt(
+                        Math.pow(mobile.rssi[0] - target.rssi[0], 2) +
+                        Math.pow(mobile.rssi[1] - target.rssi[1], 2) +
+                        Math.pow(mobile.rssi[2] - target.rssi[2], 2)
+                    );
+
+                    mDistances[targetFloor].push(distM);
+                    rDistances[targetFloor].push(distR);
+                });
+
+                // ฟังก์ชันหลักในการเลือกคำทำนายชั้น
+                function runPrediction(distanceMap, isTop3Mode) {
+                    let finalFloorScores = {};
+                    
+                    for (let fl in distanceMap) {
+                        let dList = distanceMap[fl];
+                        if (isTop3Mode) {
+                            // สูตรขั้นตอนที่ 2: กรองค่า 0 ออกแล้วหยิบ 3 ค่าน้อยสุดมาหาค่าเฉลี่ย
+                            let filtered = dList.filter(v => v > 0).sort((a, b) => a - b);
+                            finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 9999);
+                        } else {
+                            // สูตรขั้นตอนที่ 3: หาค่าเฉลี่ยรวมของชั้นนั้น
+                            let totalSum = dList.reduce((a, b) => a + b, 0);
+                            finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 9999;
+                        }
+                    }
+
+                    // หาชั้นที่มีระยะห่างต่ำที่สุด
+                    let predicted = Object.keys(finalFloorScores).reduce((a, b) => finalFloorScores[a] < finalFloorScores[b] ? a : b);
+                    return predicted === actualFloor ? "ถูก" : `ชั้น ${predicted.replace('Floor ', '')}`;
+                }
+
+                let p_m_top3 = runPrediction(mDistances, true);
+                let p_m_avg  = runPrediction(mDistances, false);
+                let p_r_top3 = runPrediction(rDistances, true);
+                let p_r_avg  = runPrediction(rDistances, false);
+
+                if (p_m_top3 === "ถูก") counts.mTop3++;
+                if (p_m_avg === "ถูก") counts.mAvg++;
+                if (p_r_top3 === "ถูก") counts.rTop3++;
+                if (p_r_avg === "ถูก") counts.rAvg++;
+
+                if (p_m_top3 !== "ถูก") {
+                    if (actualFloor.includes('1')) floorErrors['Floor 1']++;
+                    else if (actualFloor.includes('2')) floorErrors['Floor 2']++;
+                    else if (actualFloor.includes('3')) floorErrors['Floor 3']++;
+                    else if (actualFloor.includes('4')) floorErrors['Floor 4']++;
+                }
+
+                logs.push({
+                    floor: actualFloor,
+                    id: mobile.particleId,
+                    mTop3: p_m_top3,
+                    mAvg: p_m_avg,
+                    rTop3: p_r_top3,
+                    rAvg: p_r_avg
+                });
+            });
+
+            // แสดง % ผลลัพธ์รวม
+            const calcPct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
+            document.getElementById('acc-m-top3').textContent = calcPct(counts.mTop3, counts.total);
+            document.getElementById('acc-m-avg').textContent = calcPct(counts.mAvg, counts.total);
+            document.getElementById('acc-r-top3').textContent = calcPct(counts.rTop3, counts.total);
+            document.getElementById('acc-r-avg').textContent = calcPct(counts.rAvg, counts.total);
+
+            // พิมพ์ตารางรายงานลงหน้าเว็บยิงยาวครบทั้ง 55 จุด
+            const tbody = document.getElementById('table-output');
+            tbody.innerHTML = "";
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-700 border-b">${log.floor}</td>
+                    <td class="p-3 text-gray-500 border-b">${log.id}</td>
+                    <td class="p-3 border-b ${log.mTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mTop3}</td>
+                    <td class="p-3 border-b ${log.mAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mAvg}</td>
+                    <td class="p-3 border-b ${log.rTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rTop3}</td>
+                    <td class="p-3 border-b ${log.rAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rAvg}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderCharts(counts, floorErrors);
+            analysisSection.classList.remove('hidden');
+            fileInfo.textContent = "✅ ตัวคำนวณประมวลผลสมการ KNN และสรุปผลสำเร็จเสร็จสิ้น!";
+        }
+
+        function renderCharts(counts, errors) {
+            const ctx1 = document.getElementById('accuracyChart').getContext('2d');
+            const ctx2 = document.getElementById('errorFloorChart').getContext('2d');
+
+            if(accChart) accChart.destroy();
+            if(errChart) errChart.destroy();
+
+            accChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['Meas (Top 3)', 'Meas (Avg รวมชั้น)', 'RSSI (Top 3)', 'RSSI (Avg รวมชั้น)'],
+                    datasets: [{
+                        label: 'ความถูกต้องแม่นยำ (%)',
+                        data: [
+                            ((counts.mTop3 / counts.total) * 100),
+                            ((counts.mAvg / counts.total) * 100),
+                            ((counts.rTop3 / counts.total) * 100),
+                            ((counts.rAvg / counts.total) * 100)
+                        ],
+                        backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#14b8a6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { min: 0, max: 100 } }
+                }
+            });
+
+            errChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(errors),
+                    datasets: [{
+                        label: 'จำนวนจุดที่ทำนายสลับชั้น (จุด)',
+                        data: Object.values(errors),
+                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
