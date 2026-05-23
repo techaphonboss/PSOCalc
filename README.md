@@ -12,21 +12,21 @@
 
     <div class="container mx-auto px-4 py-8">
         <header class="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h1 class="text-3xl font-extrabold text-blue-600 mb-2">📊 PSOCalc Dashboard</h1>
-            <p class="text-gray-500 text-sm md:text-base">ระบบเปรียบเทียบอัลกอริทึมคำนวณชั้นภายในอาคาร (Measurement vs RSSI Predict)</p>
+            <h1 class="text-3xl font-extrabold text-blue-600 mb-2">📊 PSOCalc AI Dashboard</h1>
+            <p class="text-gray-500 text-sm md:text-base">ระบบประมวลผลสมการ KNN คำนวณชั้นภายในอาคารอัตโนมัติ (Measurement vs RSSI Predict)</p>
         </header>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
             <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                📂 อัปโหลดไฟล์ข้อมูลของคุณ (.xlsx หรือ .csv)
+                📂 อัปโหลดไฟล์ข้อมูลดิบของคุณ (.xlsx หรือ .csv)
             </h2>
             <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-8 bg-gray-50 hover:bg-gray-100 transition cursor-pointer" id="drop-zone">
                 <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden">
                 <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                 <p class="text-sm text-gray-600 font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-gray-400 mt-1">รองรับไฟล์ตารางประวัติ Particle ที่มีคอลัมน์ผลทำนาย ถูก/ผิด</p>
+                <p class="text-xs text-gray-400 mt-1">ระบบจะดึงเฉพาะสัญญาณคอลัมน์ C ถึง H ไปคำนวณสมการหาค่า ถูก/ผิด ให้เองทันที</p>
             </div>
-            <div id="file-info" class="mt-3 text-sm text-green-600 font-medium hidden text-center"></div>
+            <div id="file-info" class="mt-3 text-sm text-blue-600 font-medium hidden text-center"></div>
         </div>
 
         <div id="analysis-section" class="hidden space-y-8">
@@ -35,34 +35,34 @@
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-xs font-bold text-blue-500 uppercase">Meas. (Top 3 Avg)</span>
                     <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-m-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">ทำนายชั้นถูกต้องแม่นยำ</p>
+                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
                 </div>
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-xs font-bold text-indigo-500 uppercase">Meas. (Grand Avg)</span>
                     <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-m-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">ทำนายชั้นถูกต้องแม่นยำ</p>
+                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
                 </div>
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-xs font-bold text-emerald-500 uppercase">RSSI Pred (Top 3 Avg)</span>
                     <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-r-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">ทำนายชั้นถูกต้องแม่นยำ</p>
+                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
                 </div>
                 <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
                     <span class="text-xs font-bold text-teal-500 uppercase">RSSI Pred (Grand Avg)</span>
                     <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-r-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">ทำนายชั้นถูกต้องแม่นยำ</p>
+                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-700 mb-4">🏆 สรุปเปรียบเทียบความแม่นยำรวม (%)</h3>
+                    <h3 class="text-base font-bold text-gray-700 mb-4">🏆 สรุปเปรียบเทียบความแม่นยำของอัลกอริทึม (%)</h3>
                     <div class="h-64 relative">
                         <canvas id="accuracyChart"></canvas>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-700 mb-4">📍 อัตราการทำนายผิดพลาดจำแนกตามชั้นจริง (อิงตาม Meas. Top 3)</h3>
+                    <h3 class="text-base font-bold text-gray-700 mb-4">📍 จำนวนจุดที่ระบบประเมินผลผิดพลาดแยกตามชั้นจริง</h3>
                     <div class="h-64 relative">
                         <canvas id="errorFloorChart"></canvas>
                     </div>
@@ -71,8 +71,8 @@
 
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h3 class="text-base font-bold text-gray-700">📋 ตารางดึงข้อมูลวิเคราะห์ผลการทำนายรายจุดจาก Excel</h3>
-                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium" id="total-records">0 จุด</span>
+                    <h3 class="text-base font-bold text-gray-700">📋 ตารางคำนวณผลลัพธ์รายจุดแบบเรียลไทม์โดยระบบ AI Web-Engine</h3>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium" id="total-records">0 Particles</span>
                 </div>
                 <div class="overflow-x-auto max-h-96">
                     <table class="w-full text-left border-collapse text-xs md:text-sm">
@@ -80,10 +80,10 @@
                             <tr class="bg-gray-100 text-gray-600 sticky top-0 uppercase font-semibold">
                                 <th class="p-3 border-b">Floor จริง</th>
                                 <th class="p-3 border-b">Particle ID</th>
-                                <th class="p-3 bg-blue-50 text-blue-700 border-b">Meas (3 ค่าหาร 3)</th>
-                                <th class="p-3 bg-indigo-50 text-indigo-700 border-b">Meas (Avg. รวม)</th>
-                                <th class="p-3 bg-emerald-50 text-emerald-700 border-b">RSSI Pred (3 ค่าหาร 3)</th>
-                                <th class="p-3 bg-teal-50 text-teal-700 border-b">RSSI Pred (Avg. รวม)</th>
+                                <th class="p-3 bg-blue-50 text-blue-700 border-b">Meas (3 ค่าน้อยสุด)</th>
+                                <th class="p-3 bg-indigo-50 text-indigo-700 border-b">Meas (Avg รวมชั้น)</th>
+                                <th class="p-3 bg-emerald-50 text-emerald-700 border-b">RSSI Pred (3 ค่าน้อยสุด)</th>
+                                <th class="p-3 bg-teal-50 text-teal-700 border-b">RSSI Pred (Avg รวมชั้น)</th>
                             </tr>
                         </thead>
                         <tbody id="table-output" class="divide-y divide-gray-100">
@@ -114,7 +114,7 @@
         });
 
         function handleFile(file) {
-            fileInfo.textContent = `กำลังโหลดและดึงข้อมูลสรุป: ${file.name}`;
+            fileInfo.textContent = `ระบบกำลังประมวลผลสมการคณิตศาสตร์และจำลองตำแหน่ง...`;
             fileInfo.classList.remove('hidden');
             
             const reader = new FileReader();
@@ -125,7 +125,7 @@
                 const worksheet = workbook.Sheets[firstSheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                 
-                parseExcelData(jsonData);
+                executeLiveKNN(jsonData);
             };
             reader.readAsArrayBuffer(file);
         }
@@ -133,9 +133,9 @@
         let accChart = null;
         let errChart = null;
 
-        function parseExcelData(rows) {
-            // กรองเอาเฉพาะแถวข้อมูลที่มีคำว่า Floor อยู่ในคอลัมน์แรก (ข้ามหัวตารางแถวที่ 1-2)
-            let dataRows = rows.filter(r => r[0] && String(r[0]).trim().startsWith('Floor'));
+        function executeLiveKNN(rows) {
+            // กรองเอาแถวข้อมูลจริงคัดแยกส่วนหัวตารางออก
+            let dataRows = rows.filter(r => r[0] && String(r[0]).trim().toLowerCase().startsWith('floor'));
 
             let logs = [];
             let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: dataRows.length };
@@ -143,52 +143,94 @@
 
             document.getElementById('total-records').textContent = `${dataRows.length} Particles`;
 
-            dataRows.forEach(row => {
-                let actualFloor = String(row[0]).trim(); // คอลัมน์ A: Floor จริง
-                let particleId = row[1];                // คอลัมน์ B: Particle ID
+            // วนลูปคำนวณสมการรายพิกัด โดยให้ตัวแปรแต่ละแถวเป็น Mobile Unit เพื่อทำนายชั้นแบบสดๆ
+            dataRows.forEach((mobileRow) => {
+                let actualFloor = String(mobileRow[0]).trim(); // ชั้นที่ถูกต้องจริง
+                let particleId = String(mobileRow[1]).trim();  // รหัสไอดีประจำจุด
+                
+                // ดึงค่าความแรงสัญญาณดิบจากฟอร์มตาราง Excel
+                let m_an1 = parseFloat(mobileRow[2]) || 0;
+                let m_an2 = parseFloat(mobileRow[3]) || 0;
+                let m_an3 = parseFloat(mobileRow[4]) || 0;
 
-                // แมปปิ้งดัชนีคอลัมน์ให้ตรงตามภาพจริงใน Excel (เริ่มนับจากคอลัมน์ A = 0)
-                // J = 9 (Meas 3 ค่า), K = 10 (Meas Avg), L = 11 (RSSI 3 ค่า), M = 12 (RSSI Avg)
-                let predMeasTop3 = row[10] ? String(row[10]).trim() : "ไม่ระบุ"; 
-                let predMeasAvg  = row[11] ? String(row[11]).trim() : "ไม่ระบุ"; 
-                let predRSSITop3 = row[12] ? String(row[12]).trim() : "ไม่ระบุ"; 
-                let predRSSIAvg  = row[13] ? String(row[13]).trim() : "ไม่ระบุ"; 
+                let r_an1 = parseFloat(mobileRow[5]) || 0;
+                let r_an2 = parseFloat(mobileRow[6]) || 0;
+                let r_an3 = parseFloat(mobileRow[7]) || 0;
 
-                // ตรวจสอบสถานะความถูกต้องเพื่อนำไปคำนวณสถิติเป็น %
-                let isMeasTop3True = predMeasTop3 === "ถูก";
-                let isMeasAvgTrue  = predMeasAvg === "ถูก";
-                let isRSSITop3True = predRSSITop3 === "ถูก";
-                let isRSSIAvgTrue  = predRSSIAvg === "ถูก";
+                // อาร์เรย์เก็บค่าระยะห่างแยกแต่ละชั้น
+                let mDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
+                let rDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
 
-                if(isMeasTop3True) counts.mTop3++;
-                if(isMeasAvgTrue)  counts.mAvg++;
-                if(isRSSITop3True) counts.rTop3++;
-                if(isRSSIAvgTrue)  counts.rAvg++;
+                // คำนวณ Euclidean Distance เทียบกับกลุ่มข้อมูลประวัติทั้งหมด 55 ตัว
+                dataRows.forEach((targetRow) => {
+                    let targetFloor = String(targetRow[0]).trim();
+                    
+                    let t_m1 = parseFloat(targetRow[2]) || 0;
+                    let t_m2 = parseFloat(targetRow[3]) || 0;
+                    let t_m3 = parseFloat(targetRow[4]) || 0;
 
-                // บันทึกสถิติจุดที่ผิดชั้นเพื่อพลอตกราฟวงกลมวิเคราะห์ปัญหา
-                if(!isMeasTop3True) {
+                    let t_r1 = parseFloat(targetRow[5]) || 0;
+                    let t_r2 = parseFloat(targetRow[6]) || 0;
+                    let t_r3 = parseFloat(targetRow[7]) || 0;
+
+                    // สูตรคณิตศาสตร์ขั้นตอนที่ 1: SQRT((AN1_PR - AN1_Mobile)^2 + ...)
+                    let d_m = Math.sqrt(Math.pow(m_an1 - t_m1, 2) + Math.pow(m_an2 - t_m2, 2) + Math.pow(m_an3 - t_m3, 2));
+                    let d_r = Math.sqrt(Math.pow(r_an1 - t_r1, 2) + Math.pow(r_an2 - t_r2, 2) + Math.pow(r_an3 - t_r3, 2));
+
+                    mDistances[targetFloor].push(d_m);
+                    rDistances[targetFloor].push(d_r);
+                });
+
+                // ฟังก์ชันย่อยสำหรับประเมินผลหาชั้นที่ให้ระยะห่างน้อยที่สุด
+                function predict(distanceObj, isTop3) {
+                    let floorScores = {};
+                    for (let fl in distanceObj) {
+                        let arr = distanceObj[fl];
+                        if (isTop3) {
+                            // สูตรขั้นตอนที่ 2: กรองค่าที่เป็น 0 ออก (ตัวมันเอง) จากนั้นเลือกมา 3 ค่าน้อยสุดเพื่อหาเฉลี่ย
+                            let filtered = arr.filter(d => d > 0).sort((a, b) => a - b);
+                            floorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 999);
+                        } else {
+                            // สูตรขั้นตอนที่ 3: หาค่าเฉลี่ยรวมทั้งหมดในชั้นเพื่อนำมาเปรียบเทียบตัวแปร
+                            let sum = arr.reduce((a, b) => a + b, 0);
+                            floorScores[fl] = arr.length > 0 ? (sum / arr.length) : 999;
+                        }
+                    }
+                    // ดึงชั้นที่คำนวณแล้วได้ระยะสั้นที่สุด (ใกล้เคียงตำแหน่งจริงที่สุด)
+                    let predictedFloor = Object.keys(floorScores).reduce((a, b) => floorScores[a] < floorScores[b] ? a : b);
+                    return predictedFloor === actualFloor ? "ถูก" : `ชั้น ${predictedFloor.replace('Floor ', '')}`;
+                }
+
+                let p_m_top3 = predict(mDistances, true);
+                let p_m_avg  = predict(mDistances, false);
+                let p_r_top3 = predict(rDistances, true);
+                let p_r_avg  = predict(rDistances, false);
+
+                if (p_m_top3 === "ถูก") counts.mTop3++;
+                if (p_m_avg === "ถูก") counts.mAvg++;
+                if (p_r_top3 === "ถูก") counts.rTop3++;
+                if (p_r_avg === "ถูก") counts.rAvg++;
+
+                // บันทึกสถิติจุดคลาดเคลื่อนสำหรับนำไปจัดหมวดหมู่รายงานวิจัย
+                if (p_m_top3 !== "ถูก") {
                     floorErrors[actualFloor] = (floorErrors[actualFloor] || 0) + 1;
                 }
 
                 logs.push({
-                    floor: actualFloor,
-                    id: particleId,
-                    mTop3: predMeasTop3,
-                    mAvg: predMeasAvg,
-                    rTop3: predRSSITop3,
-                    rAvg: predRSSIAvg,
-                    flags: [isMeasTop3True, isMeasAvgTrue, isRSSITop3True, isRSSIAvgTrue]
+                    floor: actualFloor, id: particleId,
+                    mTop3: p_m_top3, mAvg: p_m_avg,
+                    rTop3: p_r_top3, rAvg: p_r_avg
                 });
             });
 
-            // อัปเดตตัวเลขเปอร์เซ็นต์บนหน้าเว็บการ์ด
-            const calcPct = (val, total) => total > 0 ? ((val / total) * 100).toFixed(2) + "%" : "0%";
-            document.getElementById('acc-m-top3').textContent = calcPct(counts.mTop3, counts.total);
-            document.getElementById('acc-m-avg').textContent = calcPct(counts.mAvg, counts.total);
-            document.getElementById('acc-r-top3').textContent = calcPct(counts.rTop3, counts.total);
-            document.getElementById('acc-r-avg').textContent = calcPct(counts.rAvg, counts.total);
+            // อัปเดตข้อมูลอัตราความแม่นยำรวม (%) ลงบนหน้าเว็บแดชบอร์ด
+            const pct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
+            document.getElementById('acc-m-top3').textContent = pct(counts.mTop3, counts.total);
+            document.getElementById('acc-m-avg').textContent = pct(counts.mAvg, counts.total);
+            document.getElementById('acc-r-top3').textContent = pct(counts.rTop3, counts.total);
+            document.getElementById('acc-r-avg').textContent = pct(counts.rAvg, counts.total);
 
-            // เจนเนอเรทข้อมูลลงตารางจำลองบนหน้าเว็บ
+            // พิมพ์ผลลัพธ์ลงในตารางรายจุดให้เห็นผลชัดเจนครบถ้วนทั้ง 55 แถว
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
             logs.forEach(log => {
@@ -196,17 +238,18 @@
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-gray-700 border-b">${log.floor}</td>
                     <td class="p-3 text-gray-500 border-b">${log.id}</td>
-                    <td class="p-3 border-b ${log.flags[0] ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mTop3}</td>
-                    <td class="p-3 border-b ${log.flags[1] ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mAvg}</td>
-                    <td class="p-3 border-b ${log.flags[2] ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rTop3}</td>
-                    <td class="p-3 border-b ${log.flags[3] ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rAvg}</td>
+                    <td class="p-3 border-b ${log.mTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mTop3}</td>
+                    <td class="p-3 border-b ${log.mAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.mAvg}</td>
+                    <td class="p-3 border-b ${log.rTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rTop3}</td>
+                    <td class="p-3 border-b ${log.rAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50'}">${log.rAvg}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // วาดและแสดงผลกราฟแดชบอร์ด
+            // วาดกราฟสรุปสถิติเปรียบเทียบประสิทธิภาพแบบไดนามิก
             renderCharts(counts, floorErrors);
             analysisSection.classList.remove('hidden');
+            fileInfo.textContent = "✅ คำนวณสมการและวิเคราะห์ข้อมูล IPS เสร็จสมบูรณ์!";
         }
 
         function renderCharts(counts, errors) {
@@ -216,13 +259,12 @@
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
 
-            // กราฟแท่งเปรียบเทียบ % ความถูกต้องรวมของทั้ง 4 วิธีคำนวณ
             accChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: ['Meas (Top 3)', 'Meas (Avg รวม)', 'RSSI (Top 3)', 'RSSI (Avg รวม)'],
+                    labels: ['Meas (Top 3)', 'Meas (Avg รวมชั้น)', 'RSSI (Top 3)', 'RSSI (Avg รวมชั้น)'],
                     datasets: [{
-                        label: 'เปอร์เซ็นต์ความถูกต้องแม่นยำ (%)',
+                        label: 'ความถูกต้องแม่นยำ (%)',
                         data: [
                             ((counts.mTop3 / counts.total) * 100),
                             ((counts.mAvg / counts.total) * 100),
@@ -239,17 +281,21 @@
                 }
             });
 
-            // กราฟวงกลมวิเคราะห์อัตราการทายชั้นผิดพลาดจำแนกตามชั้นจริง
             errChart = new Chart(ctx2, {
-                type: 'doughnut',
+                type: 'bar',
                 data: {
                     labels: Object.keys(errors),
                     datasets: [{
+                        label: 'จำนวนจุดที่ทำนายผิดพลาด (จุด)',
                         data: Object.values(errors),
                         backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                }
             });
         }
     </script>
