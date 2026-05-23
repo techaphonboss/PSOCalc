@@ -26,12 +26,12 @@
         <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v2.5</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.0</span>
                 </div>
                 <h1 class="text-3xl font-black tracking-tight text-white">
                     <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
                 </h1>
-                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์และประมวลผลอัลกอริทึม KNN หาพิกัดความถูกต้องของชั้นภายในอาคาร (Indoor Positioning System)</p>
+                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์ ประมวลผล และส่งออกข้อมูลอัลกอริทึม KNN ค้นหาพิกัดระดับชั้นภายในอาคาร (IPS)</p>
             </div>
             <div class="mt-4 md:mt-0">
                 <span class="text-xs text-gray-500 block uppercase font-bold tracking-widest">Engine Status</span>
@@ -86,25 +86,32 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
                     <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">🏆 อัตราความถูกต้องรวมในแต่ละโมเดล (%)</h3>
-                    <div class="h-72 relative"><canvas id="accuracyChart"></canvas></div>
+                    <div class="h-80 relative"><canvas id="accuracyChart"></canvas></div>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นจริง (จุด)</h3>
-                    <div class="h-72 relative"><canvas id="errorFloorChart"></canvas></div>
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นและวิธีคำนวณ (จุด)</h3>
+                    <div class="h-80 relative"><canvas id="errorFloorChart"></canvas></div>
                 </div>
             </div>
 
             <div class="bg-[#111827]/70 backdrop-blur-md rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex justify-between items-center">
+                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="text-base font-bold text-white">📋 ตารางผลการคำนวณระดับชั้นจากสมการ KNN ในเบราว์เซอร์</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">คุณสามารถกดปุ่มเพื่อส่งออกตารางสรุปผลลัพธ์นี้ไปเป็นไฟล์ Excel ได้ทันที</p>
                     </div>
-                    <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
+                    <div class="flex items-center gap-3">
+                        <button id="btn-export" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold text-xs px-4 py-2.5 rounded-lg border border-emerald-600/30 flex items-center gap-2 shadow-lg transition-all duration-200">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            EXPORT TO EXCEL (.xlsx)
+                        </button>
+                        <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-2 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
+                    </div>
                 </div>
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse text-xs md:text-sm">
                         <thead>
-                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800">
+                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800 backdrop-blur-md">
                                 <th class="p-4">Floor จริง</th>
                                 <th class="p-4">Particle ID</th>
                                 <th class="p-4 bg-blue-950/20 text-blue-400">Meas (Top 3)</th>
@@ -126,6 +133,9 @@
         const fileInput = document.getElementById('file-input');
         const engineStatus = document.getElementById('engine-status');
         const analysisSection = document.getElementById('analysis-section');
+        const btnExport = document.getElementById('btn-export');
+
+        let globalLogs = []; // เก็บข้อมูลเพื่อรอการ Export
 
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
@@ -194,9 +204,16 @@
                 return;
             }
 
-            let logs = [];
+            globalLogs = [];
             let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
-            let floorErrors = { 'Floor 1': 0, 'Floor 2': 0, 'Floor 3': 0, 'Floor 4': 0 };
+            
+            // แยกโครงสร้างความผิดพลาดแยกตามชั้น และแยกคอลัมน์วิธีอย่างชัดเจน
+            let detailErrors = {
+                'Floor 1': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
+                'Floor 2': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
+                'Floor 3': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
+                'Floor 4': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 }
+            };
 
             document.getElementById('total-records').textContent = `${cleanData.length} PARTICLES`;
 
@@ -221,11 +238,9 @@
                     for (let fl in distanceMap) {
                         let dList = distanceMap[fl];
                         if (isTop3Mode) {
-                            // ปรับเงื่อนไขให้ยืดหยุ่น: เรียงค่าน้อยสุด หากมีระยะห่าง 0 (ตัวมันเอง) ให้ข้ามไปเอาอันดับถัดไปเพื่อเฉลี่ย 3 ตัว
                             let sorted = dList.slice().sort((a, b) => a - b);
                             let filtered = sorted.filter(v => v > 0);
-                            if (filtered.length < 3) filtered = sorted; // Fallback ป้องกันอาคารสลับชั้นค้าง
-                            
+                            if (filtered.length < 3) filtered = sorted;
                             finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 999);
                         } else {
                             let totalSum = dList.reduce((a, b) => a + b, 0);
@@ -242,19 +257,12 @@
                 let p_r_top3 = runPredictionLive(rDistances, true);
                 let p_r_avg  = runPredictionLive(rDistances, false);
 
-                if (p_m_top3 === "ถูก") counts.mTop3++;
-                if (p_m_avg === "ถูก") counts.mAvg++;
-                if (p_r_top3 === "ถูก") counts.rTop3++;
-                if (p_r_avg === "ถูก") counts.rAvg++;
+                if (p_m_top3 === "ถูก") counts.mTop3++; else detailErrors[actualFloor].mTop3++;
+                if (p_m_avg === "ถูก") counts.mAvg++; else detailErrors[actualFloor].mAvg++;
+                if (p_r_top3 === "ถูก") counts.rTop3++; else detailErrors[actualFloor].rTop3++;
+                if (p_r_avg === "ถูก") counts.rAvg++; else detailErrors[actualFloor].rAvg++;
 
-                if (p_m_top3 !== "ถูก") {
-                    if (actualFloor.includes('1')) floorErrors['Floor 1']++;
-                    else if (actualFloor.includes('2')) floorErrors['Floor 2']++;
-                    else if (actualFloor.includes('3')) floorErrors['Floor 3']++;
-                    else if (actualFloor.includes('4')) floorErrors['Floor 4']++;
-                }
-
-                logs.push({
+                globalLogs.push({
                     floor: actualFloor, id: mobile.particleId,
                     mTop3: p_m_top3, mAvg: p_m_avg, rTop3: p_r_top3, rAvg: p_r_avg
                 });
@@ -268,7 +276,7 @@
 
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
-            logs.forEach(log => {
+            globalLogs.forEach(log => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-800/40 transition-colors border-b border-gray-800/50 text-xs sm:text-sm";
                 
@@ -287,14 +295,14 @@
                 tbody.appendChild(tr);
             });
 
-            renderChartsLive(counts, floorErrors);
+            renderGroupedCharts(counts, detailErrors);
             analysisSection.classList.remove('hidden');
             
             engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 mt-1";
             engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Analysis Complete`;
         }
 
-        function renderChartsLive(counts, errors) {
+        function renderGroupedCharts(counts, detailErrors) {
             const ctx1 = document.getElementById('accuracyChart').getContext('2d');
             const ctx2 = document.getElementById('errorFloorChart').getContext('2d');
 
@@ -327,27 +335,85 @@
                 }
             });
 
+            // ปรับแก้เป็นกราฟแยกวิธีตามชั้น (Grouped Bar Chart)
+            const floorLabels = ['Floor 1', 'Floor 2', 'Floor 3', 'Floor 4'];
             errChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(errors),
-                    datasets: [{
-                        data: Object.values(errors),
-                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16'],
-                        borderRadius: 5
-                    }]
+                    labels: floorLabels,
+                    datasets: [
+                        {
+                            label: 'Meas (Top 3)',
+                            data: floorLabels.map(f => detailErrors[f].mTop3),
+                            backgroundColor: '#3b82f6',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Meas (Avg)',
+                            data: floorLabels.map(f => detailErrors[f].mAvg),
+                            backgroundColor: '#6366f1',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'RSSI (Top 3)',
+                            data: floorLabels.map(f => detailErrors[f].rTop3),
+                            backgroundColor: '#10b981',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'RSSI (Avg)',
+                            data: floorLabels.map(f => detailErrors[f].rAvg),
+                            backgroundColor: '#14b8a6',
+                            borderRadius: 4
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { 
+                            display: true,
+                            labels: { color: '#9ca3af', font: { size: 10 } }
+                        } 
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', stepSize: 1 } },
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: '#1f2937' }, 
+                            ticks: { color: '#9ca3af', stepSize: 1 } 
+                        },
                         x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
                     }
                 }
             });
         }
+
+        // ฟังก์ชันในการ Export ไปยัง Excel
+        btnExport.addEventListener('click', () => {
+            if (globalLogs.length === 0) return;
+            
+            // แปลงข้อมูลเป็นรูปแบบหัวข้อคอลัมน์ภาษาไทยที่สวยงามอ่านง่าย
+            const excelRows = globalLogs.map(item => ({
+                'Floor จริง': item.floor,
+                'Particle ID': item.id,
+                'ผลทำนาย Meas (3 ค่าน้อยสุด)': item.mTop3,
+                'ผลทำนาย Meas (Avg รวมทั้งชั้น)': item.mAvg,
+                'ผลทำนาย RSSI Predict (3 ค่าน้อยสุด)': item.rTop3,
+                'ผลทำนาย RSSI Predict (Avg รวมทั้งชั้น)': item.rAvg
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelRows);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN Summary Log");
+
+            // ปรับแต่งความกว้างคอลัมน์อัตโนมัติเพื่อให้เปิดใน Excel แล้วอ่านง่าย
+            const maxProps = [20, 15, 30, 30, 30, 30];
+            worksheet['!cols'] = maxProps.map(w => ({ w: w }));
+
+            // สั่งทำการดาวน์โหลดไฟล์ออกมาทันที
+            XLSX.writeFile(workbook, "KNN_Predict_Dashboard_Report.xlsx");
+        });
     </script>
 </body>
 </html>
