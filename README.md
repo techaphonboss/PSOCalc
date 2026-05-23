@@ -3,90 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSOCalc - KNN Floor Prediction Dashboard</title>
+    <title>PSOCalc - Professional KNN IPS Live Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', 'JetBrains Mono', sans-serif;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+<body class="bg-[#0b0f19] text-[#f3f4f6] min-h-screen selection:bg-blue-500 selection:text-white">
 
-    <div class="container mx-auto px-4 py-8">
-        <header class="mb-8 text-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h1 class="text-3xl font-extrabold text-blue-600 mb-2">📊 PSOCalc AI Dashboard</h1>
-            <p class="text-gray-500 text-sm md:text-base">ระบบคำนวณสมการ KNN วิเคราะห์และเปรียบเทียบชั้นอัตโนมัติ (Live Math Engine)</p>
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="container mx-auto px-6 py-10 relative z-10">
+        
+        <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v2.0</span>
+                </div>
+                <h1 class="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                    <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
+                </h1>
+                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์และประมวลผลอัลกอริทึม KNN สำหรับหาค่าความถูกต้องของชั้นภายในอาคาร (Indoor Positioning System)</p>
+            </div>
+            <div class="mt-4 md:mt-0 text-left md:text-right">
+                <span class="text-xs text-gray-500 block uppercase font-bold tracking-widest">Current Status</span>
+                <span id="engine-status" class="inline-flex items-center gap-2 text-xs font-medium bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20 mt-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Ready for Analytics
+                </span>
+            </div>
         </header>
 
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-            <h2 class="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-                📂 อัปโหลดไฟล์ข้อมูลดิบของคุณ (.xlsx หรือ .csv)
-            </h2>
-            <div class="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-xl p-8 bg-gray-50 hover:bg-gray-100 transition cursor-pointer" id="drop-zone">
+        <div class="mb-10">
+            <div id="drop-zone" class="relative group border-2 border-dashed border-gray-700 bg-[#111827]/50 backdrop-blur-md rounded-2xl p-10 text-center hover:border-blue-500 transition-all duration-300 cursor-pointer overflow-hidden shadow-xl">
                 <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden">
-                <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                <p class="text-sm text-gray-600 font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-gray-400 mt-1">โยนไฟล์ Excel ที่มีสัญญาณดิบเข้ามาได้เลย ระบบจะคำนวณหาคำตอบให้เองทั้งหมด</p>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-gray-800/80 rounded-xl flex items-center justify-center mx-auto mb-4 border border-gray-700 group-hover:scale-110 group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-all duration-300">
+                        <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่</h3>
+                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-2">รองรับไฟล์ <span class="text-blue-400 font-semibold">.xlsx / .csv</span> ที่ได้จากการบันทึกผลสัญญาณ AN1, AN2, AN3</p>
+                    <span class="inline-block text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-md border border-gray-700">ระบบ AI จะคำนวณและประเมินผล ถูก/ผิด ให้ทันทีโดยอัตโนมัติ</span>
+                </div>
             </div>
-            <div id="file-info" class="mt-3 text-sm text-blue-600 font-medium hidden text-center"></div>
         </div>
 
-        <div id="analysis-section" class="hidden space-y-8">
+        <div id="analysis-section" class="hidden space-y-10 animate-fade-in">
             
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-xs font-bold text-blue-500 uppercase">Meas. (Top 3 Avg)</span>
-                    <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-m-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">Meas. (Top 3 Avg)</span>
+                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-m-top3">0%</h3>
+                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (3 ค่าน้อยสุดหาร 3)</p>
                 </div>
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-xs font-bold text-indigo-500 uppercase">Meas. (Grand Avg)</span>
-                    <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-m-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-1">Meas. (Grand Avg)</span>
+                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-m-avg">0%</h3>
+                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (ค่าเฉลี่ยรวมทั้งชั้น)</p>
                 </div>
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-xs font-bold text-emerald-500 uppercase">RSSI Pred (Top 3 Avg)</span>
-                    <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-r-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-1">RSSI (Top 3 Avg)</span>
+                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-r-top3">0%</h3>
+                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (3 ค่าน้อยสุดหาร 3)</p>
                 </div>
-                <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                    <span class="text-xs font-bold text-teal-500 uppercase">RSSI Pred (Grand Avg)</span>
-                    <h3 class="text-2xl font-black mt-1 text-gray-800" id="acc-r-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">อัตราการทำนายชั้นถูกต้อง</p>
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                    <span class="text-xs font-bold text-teal-400 uppercase tracking-wider block mb-1">RSSI (Grand Avg)</span>
+                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-r-avg">0%</h3>
+                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (ค่าเฉลี่ยรวมทั้งชั้น)</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-700 mb-4">🏆 สรุปเปรียบเทียบความแม่นยำของอัลกอริทึม (%)</h3>
-                    <div class="h-64 relative">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 🏆 อัตราความถูกต้องรวมในแต่ละโมเดล (%)
+                    </h3>
+                    <div class="h-72 relative">
                         <canvas id="accuracyChart"></canvas>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                    <h3 class="text-base font-bold text-gray-700 mb-4">📍 จำนวนจุดที่ระบบประเมินผลผิดพลาดแยกตามชั้นจริง</h3>
-                    <div class="h-64 relative">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span> 📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นจริง (จุด)
+                    </h3>
+                    <div class="h-72 relative">
                         <canvas id="errorFloorChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h3 class="text-base font-bold text-gray-700">📋 รายงานตารางคำนวณสดรายจุด (Live Calculation Logs)</h3>
-                    <span class="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-medium" id="total-records">0 Particles</span>
+            <div class="bg-[#111827]/70 backdrop-blur-md rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
+                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white">📋 ตารางวิเคราะห์ประมวลผลข้อมูลตำแหน่งแบบ Real-time</h3>
+                        <p class="text-xs text-gray-400 mt-0.5">ผลลัพธ์การเปรียบเทียบจากตรรกะสมการ KNN ครบถ้วนทุก Particle</p>
+                    </div>
+                    <div class="flex items-center gap-2 self-start sm:self-center">
+                        <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
+                    </div>
                 </div>
-                <div class="overflow-x-auto max-h-96">
+                
+                <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse text-xs md:text-sm">
                         <thead>
-                            <tr class="bg-gray-100 text-gray-600 sticky top-0 uppercase font-semibold">
-                                <th class="p-3 border-b">Floor จริง</th>
-                                <th class="p-3 border-b">Particle ID</th>
-                                <th class="p-3 bg-blue-50 text-blue-700 border-b">Meas (3 ค่าน้อยสุด)</th>
-                                <th class="p-3 bg-indigo-50 text-indigo-700 border-b">Meas (Avg รวมชั้น)</th>
-                                <th class="p-3 bg-emerald-50 text-emerald-700 border-b">RSSI Pred (3 ค่าน้อยสุด)</th>
-                                <th class="p-3 bg-teal-50 text-teal-700 border-b">RSSI Pred (Avg รวมชั้น)</th>
+                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase tracking-wider font-bold text-xs sticky top-0 backdrop-blur-md border-b border-gray-800">
+                                <th class="p-4">Floor จริง</th>
+                                <th class="p-4">Particle ID</th>
+                                <th class="p-4 bg-blue-950/20 text-blue-400 border-x border-gray-800/50">Meas (Top 3)</th>
+                                <th class="p-4 bg-indigo-950/20 text-indigo-400 border-r border-gray-800/50">Meas (Avg รวม)</th>
+                                <th class="p-4 bg-emerald-950/20 text-emerald-400 border-r border-gray-800/50">RSSI (Top 3)</th>
+                                <th class="p-4 bg-teal-950/20 text-teal-400">RSSI (Avg รวม)</th>
                             </tr>
                         </thead>
-                        <tbody id="table-output" class="divide-y divide-gray-100">
+                        <tbody id="table-output" class="divide-y divide-gray-800/60 code-font">
                             </tbody>
                     </table>
                 </div>
@@ -98,34 +142,39 @@
     <script>
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('file-input');
-        const fileInfo = document.getElementById('file-info');
+        const engineStatus = document.getElementById('engine-status');
         const analysisSection = document.getElementById('analysis-section');
 
         dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50', 'border-blue-400'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('bg-blue-50', 'border-blue-400'));
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500', 'bg-blue-500/5'));
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
-            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
-            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            dropZone.classList.remove('border-blue-500', 'bg-blue-500/5');
+            if (e.dataTransfer.files.length) handleLiveFile(e.dataTransfer.files[0]);
         });
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleFile(e.target.files[0]);
+            if (e.target.files.length) handleLiveFile(e.target.files[0]);
         });
 
-        function handleFile(file) {
-            fileInfo.textContent = `ระบบ AI กำลังวิเคราะห์และคำนวณสมการคณิตศาสตร์รายจุด...`;
-            fileInfo.classList.remove('hidden');
+        function handleLiveFile(file) {
+            engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 mt-1";
+            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-spin"></span> Processing Math...`;
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                
-                const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                processLiveKNN(rawRows);
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array'});
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                    
+                    executeKnnEngine(rawRows);
+                } catch (err) {
+                    engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 mt-1";
+                    engineStatus.innerHTML = `❌ Error Parsing File`;
+                }
             };
             reader.readAsArrayBuffer(file);
         }
@@ -133,17 +182,16 @@
         let accChart = null;
         let errChart = null;
 
-        function processLiveKNN(rawRows) {
+        function executeKnnEngine(rawRows) {
             let cleanData = [];
             
-            // วนลูปอ่านเพื่อกรองเอาเฉพาะแถวข้อมูลจริงที่มีคำว่า Floor 1, 2, 3, 4
+            // ลูปคัดกรองแถวข้อมูลอย่างแม่นยำ ป้องกันค่าว่างและแถวที่ไม่เกี่ยวข้องกัน
             for (let i = 0; i < rawRows.length; i++) {
                 let row = rawRows[i];
                 if (row && row[0] && String(row[0]).trim().startsWith('Floor')) {
                     let floorStr = String(row[0]).trim();
                     let partStr = row[1] ? String(row[1]).trim() : '';
                     
-                    // ข้ามแถวหัวข้อหลักคอลัมน์ออกไปถ้าเจอข้อความ Particle
                     if (partStr.toLowerCase().startsWith('particle')) continue;
 
                     let m1 = parseFloat(row[2]);
@@ -166,7 +214,8 @@
             }
 
             if (cleanData.length === 0) {
-                fileInfo.textContent = "❌ ไม่พบโครงสร้างแถวข้อมูลหรือสัญญาณดิบในไฟล์นี้";
+                engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 mt-1";
+                engineStatus.innerHTML = `❌ No Data Found`;
                 return;
             }
 
@@ -174,9 +223,9 @@
             let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
             let floorErrors = { 'Floor 1': 0, 'Floor 2': 0, 'Floor 3': 0, 'Floor 4': 0 };
 
-            document.getElementById('total-records').textContent = `${cleanData.length} Particles`;
+            document.getElementById('total-records').textContent = `${cleanData.length} PARTICLES`;
 
-            // วนลูปประมวลผลอัลกอริทึมคำนวณหาคำตอบรายจุด
+            // วนลูปสมการคำนวณ KNN ในเบราว์เซอร์
             cleanData.forEach((mobile) => {
                 let actualFloor = mobile.actualFloor;
                 
@@ -186,7 +235,7 @@
                 cleanData.forEach((target) => {
                     let targetFloor = target.actualFloor;
 
-                    // สูตรขั้นตอนที่ 1: คำนวณ Euclidean Distance
+                    // สมการขั้นตอนที่ 1: Euclidean Distance Formula
                     let distM = Math.sqrt(
                         Math.pow(mobile.meas[0] - target.meas[0], 2) +
                         Math.pow(mobile.meas[1] - target.meas[1], 2) +
@@ -203,32 +252,29 @@
                     rDistances[targetFloor].push(distR);
                 });
 
-                // ฟังก์ชันหลักในการเลือกคำทำนายชั้น
-                function runPrediction(distanceMap, isTop3Mode) {
+                // สมการขั้นตอนที่ 2 และ 3: คัดเลือกและประเมินผลค่าเฉลี่ย
+                function runPredictionLive(distanceMap, isTop3Mode) {
                     let finalFloorScores = {};
                     
                     for (let fl in distanceMap) {
                         let dList = distanceMap[fl];
                         if (isTop3Mode) {
-                            // สูตรขั้นตอนที่ 2: กรองค่า 0 ออกแล้วหยิบ 3 ค่าน้อยสุดมาหาค่าเฉลี่ย
                             let filtered = dList.filter(v => v > 0).sort((a, b) => a - b);
                             finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 9999);
                         } else {
-                            // สูตรขั้นตอนที่ 3: หาค่าเฉลี่ยรวมของชั้นนั้น
                             let totalSum = dList.reduce((a, b) => a + b, 0);
                             finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 9999;
                         }
                     }
 
-                    // หาชั้นที่มีระยะห่างต่ำที่สุด
                     let predicted = Object.keys(finalFloorScores).reduce((a, b) => finalFloorScores[a] < finalFloorScores[b] ? a : b);
                     return predicted === actualFloor ? "ถูก" : `ชั้น ${predicted.replace('Floor ', '')}`;
                 }
 
-                let p_m_top3 = runPrediction(mDistances, true);
-                let p_m_avg  = runPrediction(mDistances, false);
-                let p_r_top3 = runPrediction(rDistances, true);
-                let p_r_avg  = runPrediction(rDistances, false);
+                let p_m_top3 = runPredictionLive(mDistances, true);
+                let p_m_avg  = runPredictionLive(mDistances, false);
+                let p_r_top3 = runPredictionLive(rDistances, true);
+                let p_r_avg  = runPredictionLive(rDistances, false);
 
                 if (p_m_top3 === "ถูก") counts.mTop3++;
                 if (p_m_avg === "ถูก") counts.mAvg++;
@@ -243,54 +289,59 @@
                 }
 
                 logs.push({
-                    floor: actualFloor,
-                    id: mobile.particleId,
-                    mTop3: p_m_top3,
-                    mAvg: p_m_avg,
-                    rTop3: p_r_top3,
-                    rAvg: p_r_avg
+                    floor: actualFloor, id: mobile.particleId,
+                    mTop3: p_m_top3, mAvg: p_m_avg, rTop3: p_r_top3, rAvg: p_r_avg
                 });
             });
 
-            // แสดง % ผลลัพธ์รวม
-            const calcPct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
-            document.getElementById('acc-m-top3').textContent = calcPct(counts.mTop3, counts.total);
-            document.getElementById('acc-m-avg').textContent = calcPct(counts.mAvg, counts.total);
-            document.getElementById('acc-r-top3').textContent = calcPct(counts.rTop3, counts.total);
-            document.getElementById('acc-r-avg').textContent = calcPct(counts.rAvg, counts.total);
+            // อัปเดต % ค่าสถิติการ์ด
+            const pct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
+            document.getElementById('acc-m-top3').textContent = pct(counts.mTop3, counts.total);
+            document.getElementById('acc-m-avg').textContent = pct(counts.mAvg, counts.total);
+            document.getElementById('acc-r-top3').textContent = pct(counts.rTop3, counts.total);
+            document.getElementById('acc-r-avg').textContent = pct(counts.rAvg, counts.total);
 
-            // พิมพ์ตารางรายงานลงหน้าเว็บยิงยาวครบทั้ง 55 จุด
+            // สร้างแถวตารางแบบสไตล์มืออาชีพ
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
             logs.forEach(log => {
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/30 transition-colors";
+                
+                const badgeStyle = (val) => val === 'ถูก' 
+                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md font-bold' 
+                    : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-md font-semibold';
+
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-gray-700 border-b">${log.floor}</td>
-                    <td class="p-3 text-gray-500 border-b">${log.id}</td>
-                    <td class="p-3 border-b ${log.mTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mTop3}</td>
-                    <td class="p-3 border-b ${log.mAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.mAvg}</td>
-                    <td class="p-3 border-b ${log.rTop3 === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rTop3}</td>
-                    <td class="p-3 border-b ${log.rAvg === 'ถูก' ? 'text-green-600 bg-green-50 font-bold' : 'text-red-500 bg-red-50 font-semibold'}">${log.rAvg}</td>
+                    <td class="p-4 text-white font-medium">${log.floor}</td>
+                    <td class="p-4 text-gray-400">${log.id}</td>
+                    <td class="p-4 bg-blue-950/5 border-x border-gray-800/30"><span class="${badgeStyle(log.mTop3)}">${log.mTop3}</span></td>
+                    <td class="p-4 bg-indigo-950/5 border-r border-gray-800/30"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
+                    <td class="p-4 bg-emerald-950/5 border-r border-gray-800/30"><span class="${badgeStyle(log.rTop3)}">${log.rTop3}</span></td>
+                    <td class="p-4 bg-teal-950/5"><span class="${badgeStyle(log.rAvg)}">${log.rAvg}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            renderCharts(counts, floorErrors);
+            renderChartsLive(counts, floorErrors);
             analysisSection.classList.remove('hidden');
-            fileInfo.textContent = "✅ ตัวคำนวณประมวลผลสมการ KNN และสรุปผลสำเร็จเสร็จสิ้น!";
+            
+            engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 mt-1";
+            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Analysis Complete`;
         }
 
-        function renderCharts(counts, errors) {
+        function renderChartsLive(counts, errors) {
             const ctx1 = document.getElementById('accuracyChart').getContext('2d');
             const ctx2 = document.getElementById('errorFloorChart').getContext('2d');
 
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
 
+            // ใช้ชุดสีแบบ Cyberpunk Dashboard
             accChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: ['Meas (Top 3)', 'Meas (Avg รวมชั้น)', 'RSSI (Top 3)', 'RSSI (Avg รวมชั้น)'],
+                    labels: ['Meas (Top 3)', 'Meas (Avg รวม)', 'RSSI (Top 3)', 'RSSI (Avg รวม)'],
                     datasets: [{
                         label: 'ความถูกต้องแม่นยำ (%)',
                         data: [
@@ -299,13 +350,18 @@
                             ((counts.rTop3 / counts.total) * 100),
                             ((counts.rAvg / counts.total) * 100)
                         ],
-                        backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#14b8a6']
+                        backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#14b8a6'],
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { min: 0, max: 100 } }
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { min: 0, max: 100, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
                 }
             });
 
@@ -314,15 +370,20 @@
                 data: {
                     labels: Object.keys(errors),
                     datasets: [{
-                        label: 'จำนวนจุดที่ทำนายสลับชั้น (จุด)',
+                        label: 'จำนวนจุดคลาดเคลื่อน (จุด)',
                         data: Object.values(errors),
-                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16']
+                        backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16'],
+                        borderRadius: 6
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af', stepSize: 1 } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
                 }
             });
         }
