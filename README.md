@@ -1,430 +1,1262 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSOCalc - Professional KNN IPS Live Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <style>
-        body { font-family: 'Noto Sans Thai', 'JetBrains Mono', sans-serif; }
-        .code-font { font-family: 'JetBrains Mono', monospace; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PSOCalc — KNN + PSO IPS Dashboard v2</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Thai:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080c14;--bg2:#0d1220;--bg3:#111827;--bg4:#1a2235;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0f2f7;--muted:#6b7a99;--muted2:#4a5568;
+  --blue:#3b82f6;--blue-dim:rgba(59,130,246,0.12);--blue-b:rgba(59,130,246,0.3);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.1);--amber-b:rgba(245,158,11,0.3);
+  --green:#10b981;--green-dim:rgba(16,185,129,0.1);--green-b:rgba(16,185,129,0.3);
+  --rose:#f43f5e;--rose-dim:rgba(244,63,94,0.1);--rose-b:rgba(244,63,94,0.3);
+  --purple:#a855f7;--purple-dim:rgba(168,85,247,0.1);--purple-b:rgba(168,85,247,0.3);
+  --ok:#22c55e;--ok-dim:rgba(34,197,94,0.1);--ok-b:rgba(34,197,94,0.25);
+  --err:#ef4444;--err-dim:rgba(239,68,68,0.1);--err-b:rgba(239,68,68,0.25);
+  --mono:'IBM Plex Mono',monospace;--sans:'Noto Sans Thai',sans-serif;
+  --r:10px;--rs:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(59,130,246,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.03) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;}
+
+/* ─── HEADER ─── */
+.site-header{border-bottom:1px solid var(--border);background:rgba(8,12,20,0.85);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;max-width:1400px;margin:0 auto;}
+.logo-badge{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);padding:4px 10px;border-radius:var(--rs);text-transform:uppercase;}
+.logo-text{font-size:18px;font-weight:900;color:var(--text);letter-spacing:-.03em;margin-left:10px;}
+.logo-text span{color:var(--blue);}
+.header-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+#engine-status{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:500;font-family:var(--mono);padding:6px 14px;border-radius:99px;border:1px solid var(--border2);color:var(--muted);background:var(--bg3);transition:all .3s;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted2);flex-shrink:0;}
+.sdot.ready{background:var(--amber);animation:pulse 2s infinite;}
+.sdot.running{background:var(--blue);animation:pulse .8s infinite;}
+.sdot.done{background:var(--ok);}
+.sdot.error{background:var(--err);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ─── TABS ─── */
+.nav-tabs{display:flex;align-items:center;gap:2px;padding:0 24px;max-width:1400px;margin:0 auto;border-bottom:1px solid var(--border);}
+.nav-tab{font-size:12px;font-weight:500;padding:10px 18px;color:var(--muted);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;margin-bottom:-1px;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* ─── MAIN ─── */
+.main{padding:28px 24px;max-width:1400px;margin:0 auto;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ─── DROP ZONE ─── */
+.drop-zone{border:1.5px dashed var(--border2);border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;background:var(--bg2);transition:all .25s;margin-bottom:32px;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--blue);background:var(--blue-dim);}
+.drop-icon{width:56px;height:56px;background:var(--bg4);border:1px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px;transition:all .25s;}
+.drop-zone:hover .drop-icon{border-color:var(--blue-b);background:var(--blue-dim);}
+.drop-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.drop-sub{font-size:12px;color:var(--muted);}
+.drop-sub strong{color:var(--blue);font-weight:600;}
+
+.sec-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+
+/* ─── METRIC CARDS ─── */
+.metric-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:24px;}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;}
+.metric-accent{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;}
+.metric-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+.metric-value{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--text);line-height:1;}
+.metric-desc{font-size:11px;color:var(--muted);margin-top:5px;}
+
+/* ─── CHARTS ─── */
+.charts-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:24px;}
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.chart-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.chart-wrap{height:220px;position:relative;}
+.chart-wrap-tall{height:260px;position:relative;}
+.chart-card-full{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:24px;}
+.chart-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+
+/* ─── TABLE ─── */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:24px;}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg3);gap:12px;flex-wrap:wrap;}
+.th-title{font-size:13px;font-weight:700;color:var(--text);}
+.th-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.table-head-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.count-pill{font-family:var(--mono);font-size:11px;background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);padding:5px 12px;border-radius:var(--rs);}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;font-weight:600;padding:7px 16px;border-radius:var(--rs);border:1px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-export{background:var(--green-dim);color:var(--green);border-color:var(--green-b);}
+.btn-export:hover{background:rgba(16,185,129,0.2);}
+.btn-export svg{width:14px;height:14px;flex-shrink:0;}
+.btn-pso{background:var(--purple-dim);color:var(--purple);border-color:var(--purple-b);}
+.btn-pso:hover{background:rgba(168,85,247,0.2);}
+.tbl-scroll{overflow-x:auto;max-height:460px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:var(--bg3);position:sticky;top:0;z-index:2;}
+th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;color:var(--muted);border-bottom:1px solid var(--border);}
+th.blue{color:var(--blue);}th.amber{color:var(--amber);}th.green{color:var(--green);}th.rose{color:var(--rose);}th.purple{color:var(--purple);}
+td{padding:9px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,0.025);}
+
+.badge{display:inline-block;padding:2px 9px;border-radius:var(--rs);font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid transparent;white-space:nowrap;}
+.badge-ok{background:var(--ok-dim);color:var(--ok);border-color:var(--ok-b);}
+.badge-err{background:var(--err-dim);color:var(--err);border-color:var(--err-b);}
+.floor-pill{display:inline-block;padding:3px 10px;border-radius:var(--rs);font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid transparent;white-space:nowrap;}
+.fp1{background:rgba(245,158,11,.1);color:#f59e0b;border-color:rgba(245,158,11,.3);}
+.fp2{background:rgba(59,130,246,.1);color:#3b82f6;border-color:rgba(59,130,246,.3);}
+.fp3{background:rgba(16,185,129,.1);color:#10b981;border-color:rgba(16,185,129,.3);}
+.fp4{background:rgba(168,85,247,.1);color:#a855f7;border-color:rgba(168,85,247,.3);}
+
+/* ─── FLOOR MAP ─── */
+.map-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:24px;}
+.map-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.map-canvas-wrap{position:relative;width:100%;aspect-ratio:36/28;margin-top:12px;}
+.map-canvas-wrap canvas{width:100%;height:100%;}
+
+/* ─── PSO PAGE ─── */
+.pso-config{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px;}
+.pso-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:16px;}
+.pso-field label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:600;letter-spacing:.05em;}
+.pso-field input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 10px;}
+.pso-field input:focus{outline:none;border-color:var(--blue-b);}
+.pso-result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+.pso-result-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:14px;}
+.prc-label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.prc-value{font-family:var(--mono);font-size:20px;font-weight:600;color:var(--text);}
+.prc-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+.iteration-log{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:12px;max-height:200px;overflow-y:auto;font-family:var(--mono);font-size:11px;color:var(--muted);}
+.iter-line{padding:2px 0;border-bottom:1px solid var(--border);}
+.iter-line:last-child{border-bottom:none;}
+.iter-best{color:var(--green);}
+
+/* ─── LINE LEGEND ─── */
+.line-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.ll-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.ll-dot{width:12px;height:3px;border-radius:2px;}
+
+/* ─── DEV CARDS ─── */
+.dev-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+.dev-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;}
+.dev-card-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;}
+.dev-rows{display:flex;flex-direction:column;gap:6px;}
+.dev-row{display:flex;align-items:center;gap:8px;}
+.dev-label{font-size:11px;color:var(--muted);min-width:70px;}
+.dev-count{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);min-width:24px;text-align:right;}
+.dev-bar-wrap{flex:1;height:4px;background:var(--bg4);border-radius:2px;}
+.dev-bar{height:4px;border-radius:2px;transition:width .4s;}
+
+.empty-state{text-align:center;padding:80px 24px;color:var(--muted);}
+.empty-state p{margin-top:10px;font-size:13px;}
+.hidden{display:none!important;}
+
+@media(max-width:1000px){.metric-grid{grid-template-columns:repeat(3,1fr);}.charts-grid,.map-grid,.dev-grid{grid-template-columns:1fr;}.pso-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.metric-grid{grid-template-columns:repeat(2,1fr);}.pso-grid,.pso-result-grid{grid-template-columns:1fr;}}
+</style>
 </head>
-<body class="bg-[#0b0f19] text-[#f3f4f6] min-h-screen relative overflow-x-hidden">
+<body>
 
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+<header class="site-header">
+  <div class="hdr">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="logo-badge">LIVE ENGINE v4.0</span>
+      <div>
+        <span class="logo-text"><span>PSO</span>Calc</span>
+        <div class="header-sub">LoRa IPS — KNN + PSO Engine · AN ติดตั้งชั้น 4 คงที่ · คำนวณระยะ 3D ข้ามชั้น · อาคารคณะวิศวกรรมศาสตร์ มหาวิทยาลัยกรุงเทพธนบุรี</div>
+      </div>
+    </div>
+    <div id="engine-status"><span class="sdot ready" id="dot"></span><span id="status-text">Ready</span></div>
+  </div>
+  <nav><div class="nav-tabs">
+    <button class="nav-tab active" data-tab="overview">📊 ภาพรวม</button>
+    <button class="nav-tab" data-tab="pso">🔬 PSO Engine</button>
+    <button class="nav-tab" data-tab="deviation">📍 คลาดเคลื่อน</button>
+    <button class="nav-tab" data-tab="compare">📈 กราฟเปรียบเทียบ</button>
+    <button class="nav-tab" data-tab="floormap">🗺️ แผนผังชั้น</button>
+    <button class="nav-tab" data-tab="table">📋 ตารางผล</button>
+  </div></nav>
+</header>
 
-    <div class="container mx-auto px-6 py-10 relative z-10">
-        
-        <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
-            <div>
-                <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.8</span>
-                </div>
-                <h1 class="text-3xl font-black tracking-tight text-white">
-                    <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
-                </h1>
-                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์ ประมวลผล และส่งออกข้อมูลอัลกอริทึม KNN ค้นหาพิกัดระดับชั้นภายในอาคาร (IPS)</p>
-            </div>
-            <div class="mt-4 md:mt-0">
-                <span class="text-xs text-gray-500 block uppercase font-bold tracking-widest">Engine Status</span>
-                <span id="engine-status" class="inline-flex items-center gap-2 text-xs font-medium bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20 mt-1">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Ready for Analytics
-                </span>
-            </div>
-        </header>
+<main class="main">
 
-        <div class="mb-10">
-            <div id="drop-zone" class="relative group border-2 border-dashed border-gray-700 bg-[#111827]/50 backdrop-blur-md rounded-2xl p-10 text-center hover:border-blue-500 transition-all duration-300 cursor-pointer shadow-xl">
-                <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden">
-                <div>
-                    <div class="w-16 h-16 bg-gray-800/80 rounded-xl flex items-center justify-center mx-auto mb-4 border border-gray-700 group-hover:bg-blue-500/10 group-hover:border-blue-500/50 transition-all duration-300">
-                        <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    </div>
-                    <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่เพื่อคำนวณสด</h3>
-                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-2">รองรับไฟล์แผนผัง <span class="text-blue-400 font-semibold">.xlsx / .csv</span> ตัวสรุปค่าสัญญาณดิบ</p>
-                </div>
-            </div>
-        </div>
+  <!-- UPLOAD -->
+  <div id="drop-zone" class="drop-zone">
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
+    <div class="drop-icon">📂</div>
+    <div class="drop-title">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่</div>
+    <div class="drop-sub">รองรับ <strong>.xlsx / .xls / .csv</strong> — ข้อมูลสัญญาณ Measurement &amp; RSSI Predict</div>
+  </div>
 
-        <div id="analysis-section" class="hidden space-y-10">
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#2563eb]"></div>
-                    <span class="text-xs font-bold text-blue-400 uppercase block mb-1">Measurement (Top 3)</span>
-                    <h3 class="text-3xl font-black text-white code-font" id="acc-m-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
-                </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
-                    <span class="text-xs font-bold text-orange-400 uppercase block mb-1">Measurement (Avg รวม)</span>
-                    <h3 class="text-3xl font-black text-white code-font" id="acc-m-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
-                </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#10b981]"></div>
-                    <span class="text-xs font-bold text-emerald-400 uppercase block mb-1">Predict (Top 3)</span>
-                    <h3 class="text-3xl font-black text-white code-font" id="acc-r-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
-                </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-[#db2777]"></div>
-                    <span class="text-xs font-bold text-pink-400 uppercase block mb-1">Predict (Avg รวม)</span>
-                    <h3 class="text-3xl font-black text-white code-font" id="acc-r-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
-                </div>
-            </div>
+  <!-- ═══ TAB: OVERVIEW ═══ -->
+  <div id="tab-overview" class="tab-panel active">
+    <div id="ov-empty" class="empty-state"><div style="font-size:48px">📁</div><p>อัพโหลดไฟล์เพื่อเริ่มคำนวณ</p></div>
+    <div id="ov-content" class="hidden">
+      <div class="sec-title">อัตราความถูกต้อง 4 วิธีคำนวณ (KNN)</div>
+      <div class="metric-grid">
+        <div class="metric-card"><div class="metric-accent" style="background:var(--blue)"></div><div class="metric-label" style="color:var(--blue)">Measurement (TOP 3)</div><div class="metric-value" id="acc-m-top3">—</div><div class="metric-desc">3 ค่าน้อยสุด ÷ 3 ต่อชั้น</div></div>
+        <div class="metric-card"><div class="metric-accent" style="background:var(--amber)"></div><div class="metric-label" style="color:var(--amber)">Measurement (AVG รวม)</div><div class="metric-value" id="acc-m-avg">—</div><div class="metric-desc">ค่าเฉลี่ยรวมทั้งชั้น</div></div>
+        <div class="metric-card"><div class="metric-accent" style="background:var(--green)"></div><div class="metric-label" style="color:var(--green)">RSSI Predict (TOP 3)</div><div class="metric-value" id="acc-r-top3">—</div><div class="metric-desc">3 ค่าน้อยสุด ÷ 3 ต่อชั้น</div></div>
+        <div class="metric-card"><div class="metric-accent" style="background:var(--rose)"></div><div class="metric-label" style="color:var(--rose)">RSSI Predict (AVG รวม)</div><div class="metric-value" id="acc-r-avg">—</div><div class="metric-desc">ค่าเฉลี่ยรวมทั้งชั้น</div></div>
+        <div class="metric-card"><div class="metric-accent" style="background:var(--purple)"></div><div class="metric-label" style="color:var(--purple)">Particles โหลดแล้ว</div><div class="metric-value" id="total-loaded">55</div><div class="metric-desc">พร้อมคำนวณ PSO ทุกตัว</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">อัตราความถูกต้องรวม (%)</div><div class="chart-sub">เปรียบเทียบ 4 วิธีคำนวณ KNN</div><div class="chart-wrap"><canvas id="accChart"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title">ความผิดพลาดแยกตามชั้น (จุด)</div><div class="chart-sub">จำนวน Particle ที่ทำนายผิดชั้น</div><div class="chart-wrap"><canvas id="errChart"></canvas></div></div>
+      </div>
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">สรุปผล ถูก vs ผิด แยกชั้น (รวม 4 วิธี)</div><div class="chart-sub">แท่งสีเขียว = ถูก, แท่งสีแดง = ผิด รวมทุกวิธี</div></div></div><div class="chart-wrap-tall"><canvas id="floorSumChart"></canvas></div></div>
+    </div>
+  </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">🏆 อัตราความถูกต้องรวมในแต่ละโมเดล (%)</h3>
-                    <div class="h-80 relative"><canvas id="accuracyChart"></canvas></div>
-                </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นและวิธีคำนวณ (จุด)</h3>
-                    <div class="h-80 relative"><canvas id="errorFloorChart"></canvas></div>
-                </div>
-            </div>
-
-            <div class="bg-[#111827]/70 backdrop-blur-md rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="text-base font-bold text-white">📋 ตารางผลการคำนวณระดับชั้นจากสมการ KNN ในเบราว์เซอร์</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">กดปุ่มเพื่อส่งออกตารางสรุปผลลัพธ์นี้ไปเป็นไฟล์สเปรดชีต Excel</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button id="btn-export" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold text-xs px-4 py-2.5 rounded-lg border border-emerald-600/30 flex items-center gap-2 shadow-lg transition-all duration-200">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            EXPORT TO EXCEL (.xlsx)
-                        </button>
-                        <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-2 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
-                    </div>
-                </div>
-                <div class="overflow-x-auto max-h-[500px]">
-                    <table class="w-full text-left border-collapse text-xs md:text-sm">
-                        <thead>
-                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800 backdrop-blur-md">
-                                <th class="p-4 w-32">Floor จริง</th>
-                                <th class="p-4">Particle ID</th>
-                                <th class="p-4 bg-blue-950/20 text-blue-400">Measurement (Top 3)</th>
-                                <th class="p-4 bg-orange-950/10 text-orange-400">Measurement (Avg รวม)</th>
-                                <th class="p-4 bg-emerald-950/20 text-emerald-400">Predict (Top 3)</th>
-                                <th class="p-4 bg-pink-950/10 text-pink-400">Predict (Avg รวม)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-output" class="divide-y divide-gray-800/60 code-font"></tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
+  <!-- ═══ TAB: PSO ENGINE ═══ -->
+  <div id="tab-pso" class="tab-panel">
+    <div class="pso-config">
+      <div class="sec-title">ตั้งค่า PSO Parameters</div>
+      <!-- AN Info -->
+      <div style="background:var(--bg4);border:1px solid var(--purple-b);border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;">
+        <span style="color:var(--purple);font-weight:700;">📡 Anchor Node (ชั้น 4 คงที่)</span>
+        <span style="color:var(--muted);margin-left:12px;">AN1 (7.96, 9.07)</span>
+        <span style="color:var(--muted);margin-left:12px;">AN2 (28.10, 9.57)</span>
+        <span style="color:var(--muted);margin-left:12px;">AN3 (8.77, 22.01)</span>
+        <span style="color:var(--muted2);margin-left:16px;">|</span>
+        <span style="color:var(--ok);margin-left:12px;">PLd0 = -53 dBm (calibrated 1m)</span>
+        <span style="color:var(--muted);margin-left:12px;">FAF โถงเปิด=0 · มีพื้น=15 dBm/ชั้น</span>
+        <span style="color:var(--blue);margin-left:12px;">→ d = √(Δx²+Δy²+Δz²)</span>
+      </div>
+      <div class="pso-grid">
+        <div class="pso-field"><label>Swarm Size (n particles)</label><input type="number" id="pso-n" value="100" min="3" max="500"></div>
+        <div class="pso-field"><label>Iterations (k)</label><input type="number" id="pso-k" value="30" min="1" max="200"></div>
+        <div class="pso-field"><label>Multi-Run (ครั้ง — เฉลี่ย gbest)</label><input type="number" id="pso-runs" value="5" min="1" max="20"></div>
+        <div class="pso-field"><label>w_min (inertia min)</label><input type="number" id="pso-wmin" value="0.4" step="0.05"></div>
+        <div class="pso-field"><label>w_max (inertia max)</label><input type="number" id="pso-wmax" value="0.9" step="0.05"></div>
+        <div class="pso-field"><label>c1 (personal coeff)</label><input type="number" id="pso-c1" value="2.0" step="0.1"></div>
+        <div class="pso-field"><label>c2 (global coeff)</label><input type="number" id="pso-c2" value="2.0" step="0.1"></div>
+        <div class="pso-field"><label>η โถงเปิด (LoS)</label><input type="number" id="eta-los" value="2.2" step="0.1" min="1.5" max="4.0"></div>
+        <div class="pso-field"><label>η มีพื้น (NLoS)</label><input type="number" id="eta-nlos" value="3.8" step="0.1" min="2.0" max="6.0"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-pso" id="btn-run-pso">▶ รัน PSO ทุก Particle (55 ตัว)</button>
+        <button class="btn" id="btn-backsolve" style="background:var(--green-dim);color:var(--green);border-color:var(--green-b);">🔍 Backsolve η จาก F4</button>
+        <button class="btn" id="btn-auto-tune" style="background:var(--amber-dim);color:var(--amber);border-color:var(--amber-b);">⚡ Auto-Tune Parameters</button>
+        <button class="btn btn-export" id="btn-export-pso" style="display:none">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export PSO Results
+        </button>
+        <span id="pso-progress" style="font-size:12px;color:var(--muted);font-family:var(--mono);"></span>
+      </div>
+      <div id="tune-status" style="font-size:12px;color:var(--amber);margin-top:10px;font-family:var(--mono);display:none"></div>
+      <pre id="tune-log" style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);background:var(--bg4);border-radius:var(--rs);padding:10px;display:none;white-space:pre-wrap;"></pre>
     </div>
 
-    <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const engineStatus = document.getElementById('engine-status');
-        const analysisSection = document.getElementById('analysis-section');
-        const btnExport = document.getElementById('btn-export');
+    <div id="pso-results-section" class="hidden">
+      <div class="sec-title">ผลลัพธ์ Hybrid KNN → PSO</div>
 
-        // ตัวแปรระดับ Global สำหรับเก็บข้อมูลส่งออก Excel เท่านั้น ห้ามประกาศซ้ำข้างในฟังก์ชันอื่นเด็ดขาด
-        window.globalLogsData = []; 
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px;">
 
-        dropZone.addEventListener('click', () => fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-blue-500', 'bg-blue-500/5'));
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-blue-500', 'bg-blue-500/5');
-            if (e.dataTransfer.files.length) handleLiveFile(e.dataTransfer.files[0]);
+        <!-- Measurement side -->
+        <div style="background:var(--bg3);border:1px solid var(--purple-b);border-radius:var(--r);padding:16px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:12px;">
+            Measurement (RSSI วัดจริง)
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">KNN+PSO Accuracy</div><div class="prc-value" id="pso-acc-m">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Avg. XY Error</div><div class="prc-value" id="pso-avg-err-m">—</div><div class="prc-sub">เมตร</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Error &lt; 4m</div><div class="prc-value" id="pso-lt4-m">—</div><div class="prc-sub">จำนวน PR</div></div>
+          </div>
+        </div>
+
+        <!-- RSSI Predict side -->
+        <div style="background:var(--bg3);border:1px solid var(--green-b);border-radius:var(--r);padding:16px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">
+            RSSI Predict (diff floor model)
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">KNN+PSO Accuracy</div><div class="prc-value" id="pso-acc-r">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Avg. XY Error</div><div class="prc-value" id="pso-avg-err-r">—</div><div class="prc-sub">เมตร</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Error &lt; 4m</div><div class="prc-value" id="pso-lt4-r">—</div><div class="prc-sub">จำนวน PR</div></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">PSO Fitness ลู่เข้าตามรอบ Iteration</div><div class="chart-sub">ค่า Fitness ควรลดลงทุก iteration — แสดงการ converge</div></div></div><div class="chart-wrap-tall"><canvas id="psoConvergeChart"></canvas></div></div>
+
+      <div class="table-card">
+        <div class="table-head">
+          <div><div class="th-title">ผลลัพธ์ Hybrid KNN→PSO ทุก Particle</div>
+          <div class="th-sub">KNN ทำนายชั้น → PSO หาพิกัด XY เฉพาะชั้นนั้น · แยก Measurement vs RSSI Predict</div></div>
+          <div class="table-head-right"><span class="count-pill" id="pso-count">0</span></div>
+        </div>
+        <div class="tbl-scroll">
+          <table><thead>
+            <tr style="background:var(--bg4);">
+              <th rowspan="2">Floor จริง</th>
+              <th rowspan="2">Particle</th>
+              <th colspan="4" style="color:var(--purple);text-align:center;border-bottom:1px solid var(--purple-b)">Measurement (RSSI วัดจริง)</th>
+              <th colspan="4" style="color:var(--green);text-align:center;border-bottom:1px solid var(--green-b)">RSSI Predict (diff floor model)</th>
+            </tr>
+            <tr>
+              <th class="purple">KNN ชั้น</th>
+              <th class="purple">PSO ทำนาย</th>
+              <th class="purple">gbest X,Y</th>
+              <th class="purple">Error (m)</th>
+              <th class="green">KNN ชั้น</th>
+              <th class="green">PSO ทำนาย</th>
+              <th class="green">gbest X,Y</th>
+              <th class="green">Error (m)</th>
+            </tr>
+          </thead>
+          <tbody id="pso-table-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+    <div id="pso-empty" class="empty-state"><div style="font-size:48px">🔬</div><p>กดปุ่ม "รัน PSO" เพื่อเริ่มการคำนวณ<br><span style="font-size:11px;margin-top:6px;display:block">ไม่ต้องอัพโหลดไฟล์ — ข้อมูล PR ทั้ง 55 ตัวฝังอยู่ใน engine แล้ว</span></p></div>
+  </div>
+
+  <!-- ═══ TAB: DEVIATION ═══ -->
+  <div id="tab-deviation" class="tab-panel">
+    <div id="dev-empty" class="empty-state"><div style="font-size:48px">📍</div><p>อัพโหลดไฟล์เพื่อดูการคลาดเคลื่อน</p></div>
+    <div id="dev-content" class="hidden">
+      <div class="sec-title">การคลาดเคลื่อนระดับชั้น (KNN Floor Deviation)</div>
+      <div class="dev-grid" id="dev-cards"></div>
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">ปริมาณการคลาดเคลื่อน 0 / 1 / 2 / 3 ชั้น ทั้ง 4 วิธี KNN</div></div></div><div class="chart-wrap-tall"><canvas id="devChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: COMPARE ═══ -->
+  <div id="tab-compare" class="tab-panel">
+    <div id="cmp-empty" class="empty-state"><div style="font-size:48px">📈</div><p>อัพโหลดไฟล์เพื่อดูกราฟเปรียบเทียบ</p></div>
+    <div id="cmp-content" class="hidden">
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">เปรียบเทียบ Measurement Avg. vs RSSI Predict Avg. แยกตามชั้น</div></div><div class="line-legend"><div class="ll-item"><div class="ll-dot" style="background:var(--amber)"></div>Meas. Avg</div><div class="ll-item"><div class="ll-dot" style="background:var(--rose)"></div>RSSI Avg</div></div></div><div class="chart-wrap-tall"><canvas id="lineAvgChart"></canvas></div></div>
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">เปรียบเทียบ Measurement Top3 vs RSSI Predict Top3 แยกตามชั้น</div></div><div class="line-legend"><div class="ll-item"><div class="ll-dot" style="background:var(--blue)"></div>Meas. Top3</div><div class="ll-item"><div class="ll-dot" style="background:var(--green)"></div>RSSI Top3</div></div></div><div class="chart-wrap-tall"><canvas id="lineTop3Chart"></canvas></div></div>
+      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">รวมทั้ง 4 วิธี KNN เปรียบเทียบกัน</div></div><div class="line-legend"><div class="ll-item"><div class="ll-dot" style="background:var(--blue)"></div>Meas. Top3</div><div class="ll-item"><div class="ll-dot" style="background:var(--amber)"></div>Meas. Avg</div><div class="ll-item"><div class="ll-dot" style="background:var(--green)"></div>RSSI Top3</div><div class="ll-item"><div class="ll-dot" style="background:var(--rose)"></div>RSSI Avg</div></div></div><div class="chart-wrap-tall"><canvas id="lineAllChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: FLOOR MAP ═══ -->
+  <div id="tab-floormap" class="tab-panel">
+    <div class="sec-title">แผนผังตำแหน่ง PR และ Anchor Node แต่ละชั้น</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;gap:18px;flex-wrap:wrap;">
+      <span>▲ = AN Node (ชั้น 4 เท่านั้น)</span>
+      <span style="color:#22c55e">● = PR ถูก (KNN)</span>
+      <span style="color:#ef4444">● = PR ผิด (KNN)</span>
+      <span style="color:rgba(255,255,255,0.25)">● = ยังไม่คำนวณ</span>
+      <span style="color:#f59e0b">○ = โถงเปิด (LoS)</span>
+      <span style="color:#facc15">★ = gbest PSO</span>
+    </div>
+    <div class="map-grid">
+      <div class="map-card"><div class="chart-title" style="color:#a855f7">Floor 4</div><div class="map-canvas-wrap"><canvas id="map-f4"></canvas></div></div>
+      <div class="map-card"><div class="chart-title" style="color:#10b981">Floor 3</div><div class="map-canvas-wrap"><canvas id="map-f3"></canvas></div></div>
+      <div class="map-card"><div class="chart-title" style="color:#3b82f6">Floor 2</div><div class="map-canvas-wrap"><canvas id="map-f2"></canvas></div></div>
+      <div class="map-card"><div class="chart-title" style="color:#f59e0b">Floor 1</div><div class="map-canvas-wrap"><canvas id="map-f1"></canvas></div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted2);margin-top:4px;">* สีของจุด PR อัพเดทอัตโนมัติหลังรัน PSO Engine หรืออัพโหลดไฟล์ข้อมูล</div>
+  </div>
+
+  <!-- ═══ TAB: TABLE ═══ -->
+  <div id="tab-table" class="tab-panel">
+    <div id="tbl-empty" class="empty-state"><div style="font-size:48px">📋</div><p>อัพโหลดไฟล์เพื่อดูตารางผล KNN</p></div>
+    <div id="tbl-content" class="hidden">
+      <div class="table-card">
+        <div class="table-head">
+          <div><div class="th-title">ตารางผล KNN ทั้ง 4 วิธี</div><div class="th-sub">Measurement (TOP 3 / AVG) · RSSI Predict (TOP 3 / AVG)</div></div>
+          <div class="table-head-right">
+            <span class="count-pill" id="total-records">0</span>
+            <button class="btn btn-export" id="btn-export">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              Export Excel (3 Sheets)
+            </button>
+          </div>
+        </div>
+        <div class="tbl-scroll">
+          <table><thead><tr>
+            <th>Floor จริง</th><th>Particle</th>
+            <th class="blue">Measurement (TOP 3)</th>
+            <th class="amber">Measurement (AVG รวม)</th>
+            <th class="green">RSSI Predict (TOP 3)</th>
+            <th class="rose">RSSI Predict (AVG รวม)</th>
+            <th>คลาดเคลื่อนสูงสุด</th>
+          </tr></thead>
+          <tbody id="table-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+(function(){
+"use strict";
+
+// ══════════════════════════════════════════════
+// EMBEDDED DATABASE — PR coordinates + RSSI
+// ══════════════════════════════════════════════
+const ANCHORS = [
+  {id:'AN1', x:7.96,  y:9.07},
+  {id:'AN2', x:28.10, y:9.57},
+  {id:'AN3', x:8.77,  y:22.01},
+];
+
+const PR_DB = [
+  {floor:'Floor 4',id:'PR1', x:13.23,y:11.32,mRSSI:[-59.190,-63.042,-66.214],pRSSI:[-68.163,-76.506,-74.276]},
+  {floor:'Floor 4',id:'PR2', x:2.09, y:10.65,mRSSI:[-64.607,-66.290,-69.852],pRSSI:[-68.677,-81.310,-75.397]},
+  {floor:'Floor 4',id:'PR3', x:1.66, y:2.18, mRSSI:[-60.217,-76.087,-82.529],pRSSI:[-72.403,-81.772,-79.472]},
+  {floor:'Floor 4',id:'PR4', x:13.95,y:3.33, mRSSI:[-81.694,-60.838,-72.392],pRSSI:[-71.378,-76.787,-78.749]},
+  {floor:'Floor 4',id:'PR5', x:22.21,y:11.51,mRSSI:[-64.111,-58.103,-66.111],pRSSI:[-76.202,-68.850,-77.637]},
+  {floor:'Floor 4',id:'PR6', x:22.07,y:2.56, mRSSI:[-66.588,-57.000,-78.529],pRSSI:[-76.829,-72.320,-80.444]},
+  {floor:'Floor 4',id:'PR7', x:33.78,y:12.28,mRSSI:[-77.941,-50.087,-77.000],pRSSI:[-81.306,-68.978,-81.574]},
+  {floor:'Floor 4',id:'PR8', x:34.04,y:3.23, mRSSI:[-89.000,-70.348,-89.609],pRSSI:[-81.539,-71.778,-82.962]},
+  {floor:'Floor 4',id:'PR9', x:13.81,y:20.25,mRSSI:[-65.133,-78.450,-56.947],pRSSI:[-75.020,-78.028,-67.548]},
+  {floor:'Floor 4',id:'PR10',x:13.40,y:24.14,mRSSI:[-71.333,-69.059,-55.167],pRSSI:[-77.094,-79.318,-67.145]},
+  {floor:'Floor 4',id:'PR11',x:1.98, y:23.73,mRSSI:[-77.938,-82.043,-60.000],pRSSI:[-76.991,-82.458,-69.907]},
+  {floor:'Floor 4',id:'PR12',x:3.18, y:19.85,mRSSI:[-73.417,-86.071,-61.214],pRSSI:[-74.432,-81.613,-68.553]},
+  {floor:'Floor 4',id:'PR13',x:8.97, y:15.15,mRSSI:[-60.133,-68.611,-62.056],pRSSI:[-68.796,-78.989,-69.730]},
+  {floor:'Floor 4',id:'PR14',x:18.03,y:17.03,mRSSI:[-79.500,-64.176,-64.643],pRSSI:[-75.169,-74.961,-73.436]},
+  {floor:'Floor 4',id:'PR15',x:30.20,y:15.99,mRSSI:[-78.333,-67.611,-66.929],pRSSI:[-80.344,-69.592,-79.950]},
+  {floor:'Floor 4',id:'PR16',x:18.09,y:7.44, mRSSI:[-64.053,-60.000,-70.960],pRSSI:[-73.223,-73.201,-77.759]},
+  {floor:'Floor 3',id:'PR17',x:22.21,y:11.51,mRSSI:[-79.529,-52.000,-74.706],pRSSI:[-79.046,-73.087,-80.293]},
+  {floor:'Floor 3',id:'PR18',x:33.78,y:12.28,mRSSI:[-77.194,-54.571,-92.636],pRSSI:[-83.527,-73.180,-83.765]},
+  {floor:'Floor 3',id:'PR19',x:34.04,y:3.23, mRSSI:[-80.611,-66.364,-91.412],pRSSI:[-83.734,-75.341,-85.001]},
+  {floor:'Floor 3',id:'PR20',x:22.07,y:2.56, mRSSI:[-83.737,-71.500,-90.471],pRSSI:[-79.589,-75.779,-82.763]},
+  {floor:'Floor 3',id:'PR21',x:13.23,y:11.32,mRSSI:[-65.727,-75.353,-69.000],pRSSI:[-72.594,-79.309,-77.403]},
+  {floor:'Floor 3',id:'PR22',x:2.09, y:10.65,mRSSI:[-70.105,-88.154,-74.944],pRSSI:[-72.961,-83.531,-78.355]},
+  {floor:'Floor 3',id:'PR23',x:1.66, y:2.18, mRSSI:[-67.167,-86.200,-89.167],pRSSI:[-75.847,-83.941,-81.903]},
+  {floor:'Floor 3',id:'PR24',x:13.95,y:3.33, mRSSI:[-71.211,-76.563,-78.000],pRSSI:[-75.020,-79.553,-81.267]},
+  {floor:'Floor 3',id:'PR25',x:13.81,y:20.25,mRSSI:[-85.370,-80.947,-56.267],pRSSI:[-78.033,-80.634,-72.166]},
+  {floor:'Floor 3',id:'PR26',x:13.40,y:24.14,mRSSI:[-79.737,-87.867,-64.600],pRSSI:[-79.820,-81.768,-71.894]},
+  {floor:'Floor 3',id:'PR27',x:1.98, y:23.73,mRSSI:[-77.263,-87.000,-58.529],pRSSI:[-79.730,-84.552,-73.875]},
+  {floor:'Floor 3',id:'PR28',x:3.18, y:19.85,mRSSI:[-75.867,-87.000,-55.765],pRSSI:[-77.534,-83.800,-72.871]},
+  {floor:'Floor 3',id:'PR29',x:8.97, y:15.15,mRSSI:[-76.286,-80.471,-78.947],pRSSI:[-73.048,-81.478,-73.741]},
+  {floor:'Floor 3',id:'PR30',x:18.03,y:17.03,mRSSI:[-75.450,-80.857,-76.813],pRSSI:[-78.160,-77.982,-76.698]},
+  {floor:'Floor 3',id:'PR31',x:30.20,y:15.99,mRSSI:[-101.706,-65.000,-77.857],pRSSI:[-82.674,-73.637,-82.326]},
+  {floor:'Floor 3',id:'PR32',x:18.09,y:7.44, mRSSI:[-73.061,-74.731,-85.000],pRSSI:[-76.522,-76.503,-80.399]},
+  {floor:'Floor 2',id:'PR33',x:13.81,y:20.25,mRSSI:[-86.357,-85.000,-74.500],pRSSI:[-81.324,-83.395,-77.476]},
+  {floor:'Floor 2',id:'PR34',x:13.40,y:24.14,mRSSI:[-100.056,-86.615,-73.118],pRSSI:[-82.731,-84.335,-77.338]},
+  {floor:'Floor 2',id:'PR35',x:1.98, y:23.73,mRSSI:[-93.222,-99.833,-71.071],pRSSI:[-82.659,-86.706,-78.438]},
+  {floor:'Floor 2',id:'PR36',x:3.18, y:19.85,mRSSI:[-87.400,-95.667,-59.000],pRSSI:[-80.945,-86.059,-77.854]},
+  {floor:'Floor 2',id:'PR37',x:8.97, y:15.15,mRSSI:[-74.333,-91.667,-71.133],pRSSI:[-77.953,-84.093,-78.357]},
+  {floor:'Floor 2',id:'PR38',x:18.03,y:17.03,mRSSI:[-75.176,-80.938,-83.563],pRSSI:[-81.422,-81.285,-80.328]},
+  {floor:'Floor 2',id:'PR39',x:30.20,y:15.99,mRSSI:[-92.444,-73.667,-80.733],pRSSI:[-85.098,-78.295,-84.804]},
+  {floor:'Floor 1',id:'PR40',x:13.23,y:11.32,mRSSI:[-70.364,-70.944,-78.000],pRSSI:[-82.394,-85.392,-84.329]},
+  {floor:'Floor 1',id:'PR41',x:2.09, y:10.65,mRSSI:[-67.750,-81.421,-79.100],pRSSI:[-82.502,-88.160,-84.842]},
+  {floor:'Floor 1',id:'PR42',x:1.66, y:2.18, mRSSI:[-63.682,-84.389,-75.444],pRSSI:[-83.580,-88.451,-87.040]},
+  {floor:'Floor 1',id:'PR43',x:13.95,y:3.33, mRSSI:[-76.353,-81.308,-77.667],pRSSI:[-83.229,-85.538,-86.618]},
+  {floor:'Floor 1',id:'PR44',x:22.21,y:11.51,mRSSI:[-79.583,-73.063,-94.400],pRSSI:[-85.237,-82.540,-85.993]},
+  {floor:'Floor 1',id:'PR45',x:22.07,y:2.56, mRSSI:[-79.474,-82.071,-91.000],pRSSI:[-85.559,-83.550,-87.625]},
+  {floor:'Floor 1',id:'PR46',x:33.78,y:12.28,mRSSI:[-83.960,-70.955,-89.526],pRSSI:[-88.304,-83.361,-89.212]},
+  {floor:'Floor 1',id:'PR47',x:34.04,y:3.23, mRSSI:[-85.042,-67.000,-93.045],pRSSI:[-88.158,-82.570,-88.326]},
+  {floor:'Floor 1',id:'PR48',x:13.81,y:20.25,mRSSI:[-98.643,-98.714,-84.000],pRSSI:[-84.664,-86.209,-82.276]},
+  {floor:'Floor 1',id:'PR49',x:13.40,y:24.14,mRSSI:[-92.267,-96.933,-85.000],pRSSI:[-85.700,-86.949,-82.205]},
+  {floor:'Floor 1',id:'PR50',x:1.98, y:23.73,mRSSI:[-101.429,-107.923,-93.467],pRSSI:[-85.645,-88.888,-82.799]},
+  {floor:'Floor 1',id:'PR51',x:3.18, y:19.85,mRSSI:[-105.063,-110.118,-88.000],pRSSI:[-84.398,-88.351,-82.475]},
+  {floor:'Floor 1',id:'PR52',x:8.97, y:15.15,mRSSI:[-91.813,-98.882,-90.000],pRSSI:[-82.528,-86.757,-82.753]},
+  {floor:'Floor 1',id:'PR53',x:18.03,y:17.03,mRSSI:[-100.737,-90.000,-100.188],pRSSI:[-84.734,-84.637,-83.976]},
+  {floor:'Floor 1',id:'PR54',x:30.20,y:15.99,mRSSI:[-103.647,-97.846,-100.000],pRSSI:[-87.564,-82.718,-87.326]},
+  {floor:'Floor 1',id:'PR55',x:18.09,y:7.44, mRSSI:[-87.000,-84.083,-88.882],pRSSI:[-83.891,-83.882,-86.060]},
+];
+
+const FLOORS = ['Floor 1','Floor 2','Floor 3','Floor 4'];
+const C = ['#3b82f6','#f59e0b','#10b981','#f43f5e'];
+const GRID_C = 'rgba(255,255,255,0.06)';
+const TICK_C = '#6b7a99';
+
+var knnLogs = [];
+var psoLogs = [];
+var charts = {};
+var psoIterAvg = [];
+
+// ── TABS ──
+document.querySelectorAll('.nav-tab').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.nav-tab').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    var id = btn.dataset.tab;
+    document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+    document.getElementById('tab-'+id).classList.add('active');
+    if(id==='floormap') renderMaps();
+  });
+});
+
+function setStatus(state,txt){
+  document.getElementById('dot').className='sdot '+state;
+  document.getElementById('status-text').textContent=txt;
+}
+
+// ── DROP ZONE ──
+var dz=document.getElementById('drop-zone');
+var fi=document.getElementById('file-input');
+dz.addEventListener('click',function(){fi.click();});
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag-over');});
+dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0]);});
+fi.addEventListener('change',function(e){if(e.target.files.length)handleFile(e.target.files[0]);});
+
+function handleFile(file){
+  setStatus('running','กำลังประมวลผล...');
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      runKNN(rows);
+    }catch(err){setStatus('error','Error: '+err.message);}
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// ══ KNN ENGINE ══
+function runKNN(rawRows){
+  var data=[];
+  rawRows.forEach(function(row){
+    if(!row||!row[0])return;
+    var fs=String(row[0]).trim();
+    if(!fs.startsWith('Floor'))return;
+    var pid=row[1]?String(row[1]).trim():'';
+    if(pid.toLowerCase()==='particle')return;
+    var m1=parseFloat(row[2]),m2=parseFloat(row[3]),m3=parseFloat(row[4]);
+    var r1=parseFloat(row[5]),r2=parseFloat(row[6]),r3=parseFloat(row[7]);
+    if(isNaN(m1)||isNaN(m2)||isNaN(m3))return;
+    data.push({floor:fs,id:pid,meas:[m1,m2,m3],rssi:[isNaN(r1)?0:r1,isNaN(r2)?0:r2,isNaN(r3)?0:r3]});
+  });
+  if(!data.length){setStatus('error','ไม่พบข้อมูล');return;}
+
+  knnLogs=[];
+  data.forEach(function(mobile){
+    var af=mobile.floor;
+    var mD={},rD={};
+    FLOORS.forEach(function(f){mD[f]=[];rD[f]=[];});
+    data.forEach(function(t){
+      var tf=t.floor;
+      if(!mD[tf])return;
+      mD[tf].push(euclid3(mobile.meas,t.meas));
+      rD[tf].push(euclid3(mobile.rssi,t.rssi));
+    });
+    var pMT=predKNN(mD,true,af),pMA=predKNN(mD,false,af);
+    var pRT=predKNN(rD,true,af),pRA=predKNN(rD,false,af);
+    function res(p){return p===af?'ถูก':'ผิด→'+p.replace('Floor','ชั้น');}
+    function gap(p){var a=parseInt(af.replace('Floor ','')),b=parseInt(p.replace('Floor ',''));return isNaN(a)||isNaN(b)?0:Math.abs(a-b);}
+    knnLogs.push({floor:af,id:mobile.id,mTop3:res(pMT),mAvg:res(pMA),rTop3:res(pRT),rAvg:res(pRA),gMT3:gap(pMT),gMA:gap(pMA),gRT3:gap(pRT),gRA:gap(pRA)});
+  });
+
+  renderKNNAll();
+  setStatus('done','KNN เสร็จ — '+knnLogs.length+' Particles');
+}
+
+function euclid3(a,b){return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);}
+
+function predKNN(dm,top3,af){
+  var s={};
+  Object.keys(dm).forEach(function(fl){
+    var d=dm[fl];
+    if(!d.length){s[fl]=999;return;}
+    if(top3){
+      var sorted=d.slice().sort(function(a,b){return a-b;});
+      var f=sorted.filter(function(v){return v>0;});
+      if(!f.length)f=sorted;
+      s[fl]=f.length>=3?(f[0]+f[1]+f[2])/3:f[0]||999;
+    }else{s[fl]=d.reduce(function(a,b){return a+b;},0)/d.length;}
+  });
+  return Object.keys(s).reduce(function(a,b){return s[a]<s[b]?a:b;});
+}
+
+function renderKNNAll(){
+  renderOverview();renderDeviation();renderCompare();renderKNNTable();
+  ['ov','dev','cmp','tbl'].forEach(function(k){
+    document.getElementById(k+'-empty').classList.add('hidden');
+    document.getElementById(k+'-content').classList.remove('hidden');
+  });
+  renderMaps();
+}
+
+// ── Overview charts ──
+function renderOverview(){
+  var t=knnLogs.length;
+  var ok=function(k){return knnLogs.filter(function(l){return l[k]==='ถูก';}).length;};
+  var okMT=ok('mTop3'),okMA=ok('mAvg'),okRT=ok('rTop3'),okRA=ok('rAvg');
+  var pct=function(v){return ((v/t)*100).toFixed(1)+'%';};
+  document.getElementById('acc-m-top3').textContent=pct(okMT);
+  document.getElementById('acc-m-avg').textContent=pct(okMA);
+  document.getElementById('acc-r-top3').textContent=pct(okRT);
+  document.getElementById('acc-r-avg').textContent=pct(okRA);
+
+  mkChart('accChart',{type:'bar',data:{labels:['Meas. Top3','Meas. Avg','RSSI Top3','RSSI Avg'],datasets:[{data:[+(okMT/t*100).toFixed(1),+(okMA/t*100).toFixed(1),+(okRT/t*100).toFixed(1),+(okRA/t*100).toFixed(1)],backgroundColor:C,borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.parsed.y.toFixed(1)+'%';}}}},scales:{y:{min:0,max:100,grid:{color:GRID_C},ticks:{color:TICK_C,callback:function(v){return v+'%';}}},x:{grid:{display:false},ticks:{color:TICK_C,font:{size:10}}}}}});
+
+  var errF={};FLOORS.forEach(function(f){errF[f]={mt:0,ma:0,rt:0,ra:0};});
+  knnLogs.forEach(function(l){if(!errF[l.floor])return;if(l.mTop3!=='ถูก')errF[l.floor].mt++;if(l.mAvg!=='ถูก')errF[l.floor].ma++;if(l.rTop3!=='ถูก')errF[l.floor].rt++;if(l.rAvg!=='ถูก')errF[l.floor].ra++;});
+  mkChart('errChart',{type:'bar',data:{labels:FLOORS,datasets:[{label:'Meas.Top3',data:FLOORS.map(function(f){return errF[f].mt;}),backgroundColor:C[0],borderRadius:4},{label:'Meas.Avg',data:FLOORS.map(function(f){return errF[f].ma;}),backgroundColor:C[1],borderRadius:4},{label:'RSSI Top3',data:FLOORS.map(function(f){return errF[f].rt;}),backgroundColor:C[2],borderRadius:4},{label:'RSSI Avg',data:FLOORS.map(function(f){return errF[f].ra;}),backgroundColor:C[3],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:10},boxWidth:10,padding:10}}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C,stepSize:1}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+
+  var okF={},wF={};FLOORS.forEach(function(f){okF[f]=0;wF[f]=0;});
+  knnLogs.forEach(function(l){if(!okF[l.floor])return;var c=[l.mTop3,l.mAvg,l.rTop3,l.rAvg].filter(function(v){return v==='ถูก';}).length;okF[l.floor]+=c;wF[l.floor]+=(4-c);});
+  mkChart('floorSumChart',{type:'bar',data:{labels:FLOORS,datasets:[{label:'ถูก (รวม 4 วิธี)',data:FLOORS.map(function(f){return okF[f];}),backgroundColor:'rgba(34,197,94,0.7)',borderRadius:5},{label:'ผิด (รวม 4 วิธี)',data:FLOORS.map(function(f){return wF[f];}),backgroundColor:'rgba(239,68,68,0.6)',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:11},boxWidth:12,padding:14}}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+}
+
+// ── Deviation ──
+function renderDeviation(){
+  var methods=[{key:'gMT3',label:'Meas.Top3',color:C[0]},{key:'gMA',label:'Meas.Avg',color:C[1]},{key:'gRT3',label:'RSSI Top3',color:C[2]},{key:'gRA',label:'RSSI Avg',color:C[3]}];
+  var dc=document.getElementById('dev-cards');dc.innerHTML='';
+  var allCounts=[];
+  methods.forEach(function(m){
+    var d={0:0,1:0,2:0,3:0};
+    knnLogs.forEach(function(l){var v=l[m.key];if(d[v]!==undefined)d[v]++;});
+    allCounts.push(d);
+    var c=document.createElement('div');c.className='dev-card';
+    var maxV=Math.max(d[0],d[1],d[2],d[3])||1;
+    c.innerHTML='<div class="dev-card-title" style="color:'+m.color+'">'+m.label+'</div><div class="dev-rows">'+
+      [['✅ ถูกชั้น',d[0],'#22c55e'],['+1 ชั้น',d[1],C[1]],['+2 ชั้น',d[2],C[3]],['+3 ชั้น',d[3],'#ef4444']].map(function(r){
+        return '<div class="dev-row"><span class="dev-label">'+r[0]+'</span><div class="dev-bar-wrap"><div class="dev-bar" style="width:'+((r[1]/maxV)*100).toFixed(0)+'%;background:'+r[2]+'"></div></div><span class="dev-count">'+r[1]+'</span></div>';
+      }).join('')+'</div>';
+    dc.appendChild(c);
+  });
+  mkChart('devChart',{type:'bar',data:{labels:['0 ชั้น (ถูก)','+1 ชั้น','+2 ชั้น','+3 ชั้น'],datasets:[{label:'Meas.Top3',data:[allCounts[0][0],allCounts[0][1],allCounts[0][2],allCounts[0][3]],backgroundColor:C[0],borderRadius:5},{label:'Meas.Avg',data:[allCounts[1][0],allCounts[1][1],allCounts[1][2],allCounts[1][3]],backgroundColor:C[1],borderRadius:5},{label:'RSSI Top3',data:[allCounts[2][0],allCounts[2][1],allCounts[2][2],allCounts[2][3]],backgroundColor:C[2],borderRadius:5},{label:'RSSI Avg',data:[allCounts[3][0],allCounts[3][1],allCounts[3][2],allCounts[3][3]],backgroundColor:C[3],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:11},boxWidth:12,padding:12}}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C,stepSize:1}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+}
+
+// ── Compare Line ──
+function renderCompare(){
+  function floorPct(key,fl){var sub=knnLogs.filter(function(l){return l.floor===fl;});if(!sub.length)return 0;return +((sub.filter(function(l){return l[key]==='ถูก';}).length/sub.length)*100).toFixed(1);}
+  function lineDsOpts(color){return{borderColor:color,backgroundColor:color.replace('rgb','rgba').replace(')',',0.08)'),pointBackgroundColor:color,pointRadius:5,pointHoverRadius:7,fill:true,tension:.35,borderWidth:2};}
+  var lOpts=function(){return{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:11},boxWidth:12,padding:12}},tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+c.parsed.y.toFixed(1)+'%';}}}},scales:{y:{min:0,max:100,grid:{color:GRID_C},ticks:{color:TICK_C,callback:function(v){return v+'%';}}},x:{grid:{color:GRID_C},ticks:{color:TICK_C}}}};};
+  mkChart('lineAvgChart',{type:'line',data:{labels:FLOORS,datasets:[Object.assign({label:'Meas.Avg',data:FLOORS.map(function(f){return floorPct('mAvg',f);})},lineDsOpts(C[1])),Object.assign({label:'RSSI Avg',data:FLOORS.map(function(f){return floorPct('rAvg',f);})},lineDsOpts(C[3]))]},options:lOpts()});
+  mkChart('lineTop3Chart',{type:'line',data:{labels:FLOORS,datasets:[Object.assign({label:'Meas.Top3',data:FLOORS.map(function(f){return floorPct('mTop3',f);})},lineDsOpts(C[0])),Object.assign({label:'RSSI Top3',data:FLOORS.map(function(f){return floorPct('rTop3',f);})},lineDsOpts(C[2]))]},options:lOpts()});
+  mkChart('lineAllChart',{type:'line',data:{labels:FLOORS,datasets:[Object.assign({label:'Meas.Top3',data:FLOORS.map(function(f){return floorPct('mTop3',f);})},lineDsOpts(C[0])),Object.assign({label:'Meas.Avg',data:FLOORS.map(function(f){return floorPct('mAvg',f);})},lineDsOpts(C[1])),Object.assign({label:'RSSI Top3',data:FLOORS.map(function(f){return floorPct('rTop3',f);})},lineDsOpts(C[2])),Object.assign({label:'RSSI Avg',data:FLOORS.map(function(f){return floorPct('rAvg',f);})},lineDsOpts(C[3]))]},options:lOpts()});
+}
+
+// ── KNN Table ──
+function renderKNNTable(){
+  document.getElementById('total-records').textContent=knnLogs.length+' Particles';
+  var fp={'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+  var tbody=document.getElementById('table-body');tbody.innerHTML='';
+  knnLogs.forEach(function(log){
+    var fn=log.floor.replace('Floor ','');
+    var maxG=Math.max(log.gMT3,log.gMA,log.gRT3,log.gRA);
+    var gc=maxG===0?'var(--ok)':maxG===1?'var(--amber)':'var(--err)';
+    tbody.innerHTML+='<tr><td><span class="floor-pill '+(fp[fn]||'')+'">'+log.floor+'</span></td><td style="color:var(--muted)">'+log.id+'</td><td>'+badge(log.mTop3)+'</td><td>'+badge(log.mAvg)+'</td><td>'+badge(log.rTop3)+'</td><td>'+badge(log.rAvg)+'</td><td><span style="font-family:var(--mono);font-size:11px;color:'+gc+'">'+(maxG===0?'ถูกทุกวิธี':maxG+'ชั้น')+'</span></td></tr>';
+  });
+}
+
+function badge(v){if(v==='ถูก')return '<span class="badge badge-ok">ถูก</span>';var p=v.split('→');return '<span class="badge badge-err">'+(p[1]||v)+'</span>';}
+
+// ══ PSO ENGINE ══
+document.getElementById('btn-run-pso').addEventListener('click',runPSOAll);
+
+function runPSOAll(){
+  var n    = parseInt(document.getElementById('pso-n').value)    || 100;
+  var K    = parseInt(document.getElementById('pso-k').value)    || 30;
+  var R    = parseInt(document.getElementById('pso-runs').value) || 5;
+  var wmin = parseFloat(document.getElementById('pso-wmin').value) || 0.4;
+  var wmax = parseFloat(document.getElementById('pso-wmax').value) || 0.9;
+  var c1   = parseFloat(document.getElementById('pso-c1').value)   || 2.0;
+  var c2   = parseFloat(document.getElementById('pso-c2').value)   || 2.0;
+  var etaLos  = parseFloat(document.getElementById('eta-los').value)  || 2.2;
+  var etaNlos = parseFloat(document.getElementById('eta-nlos').value) || 3.8;
+
+  setStatus('running','Hybrid KNN→PSO กำลังประมวลผล...');
+  document.getElementById('pso-progress').textContent =
+    'PLd0=-53 · ηLoS='+etaLos+' · ηNLoS='+etaNlos+' · k='+K+' · n='+n+' · runs='+R;
+  document.getElementById('pso-empty').classList.add('hidden');
+
+  setTimeout(function(){
+    psoLogs = [];
+    psoIterAvg = Array(K).fill(0);
+
+    PR_DB.forEach(function(mobile, idx){
+      document.getElementById('pso-progress').textContent =
+        'คำนวณ '+(idx+1)+'/'+PR_DB.length+'... ['+mobile.id+']';
+
+      // ── HYBRID: KNN ทำนายชั้นก่อน → PSO เฉพาะชั้นนั้น ──
+      // หา KNN floor prediction จาก mRSSI
+      var knnFloorM = knnPredictFloor(mobile.mRSSI, mobile.id);
+      // หา KNN floor prediction จาก pRSSI
+      var knnFloorR = knnPredictFloor(mobile.pRSSI, mobile.id);
+
+      // รัน PSO เฉพาะใน floor ที่ KNN ทำนาย
+      var rM = psoRunHybrid(mobile.mRSSI, mobile, knnFloorM, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
+      var rR = psoRunHybrid(mobile.pRSSI, mobile, knnFloorR, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
+
+      rR.iterFitness.forEach(function(v,i){ psoIterAvg[i] += v; });
+
+      // แยก error ระหว่าง Meas. และ RSSI Pred.
+      var xyErrM = Math.sqrt((rM.gx-mobile.x)**2 + (rM.gy-mobile.y)**2);
+      var xyErrR = Math.sqrt((rR.gx-mobile.x)**2 + (rR.gy-mobile.y)**2);
+
+      psoLogs.push({
+        floor:mobile.floor, id:mobile.id,
+        px:mobile.x, py:mobile.y,
+        knnFloorM:knnFloorM, knnFloorR:knnFloorR,
+        predFloorM:rM.predFloor, gxM:rM.gx, gyM:rM.gy, costM:rM.gcost, xyErrM:xyErrM,
+        predFloorR:rR.predFloor, gxR:rR.gx, gyR:rR.gy, costR:rR.gcost, xyErrR:xyErrR
+      });
+    });
+
+    psoIterAvg = psoIterAvg.map(function(v){ return +(v/PR_DB.length).toFixed(3); });
+    renderPSOResults();
+    setStatus('done','Hybrid KNN→PSO เสร็จ — 55 Particles');
+    document.getElementById('pso-progress').textContent = 'เสร็จสิ้น ✓';
+    document.getElementById('btn-export-pso').style.display = '';
+  }, 50);
+}
+
+// ── KNN Floor Prediction (ใช้ข้อมูล PR_DB เป็น reference) ──
+function knnPredictFloor(mobileRSSI, mobileId){
+  var floorDist = {};
+  FLOORS.forEach(function(fl){ floorDist[fl] = []; });
+
+  PR_DB.forEach(function(pr){
+    if(pr.id === mobileId) return; // leave-one-out
+    var d = euclid3RSSI(mobileRSSI, pr.pRSSI);
+    if(floorDist[pr.floor]) floorDist[pr.floor].push(d);
+  });
+
+  // Top-3 ต่อชั้น (วิธีที่แม่นที่สุดจาก KNN ของเรา)
+  var floorScores = {};
+  FLOORS.forEach(function(fl){
+    var dList = floorDist[fl].slice().sort(function(a,b){return a-b;});
+    var top3 = dList.filter(function(v){return v>0;}).slice(0,3);
+    floorScores[fl] = top3.length>0 ? top3.reduce(function(a,b){return a+b;},0)/top3.length : 999;
+  });
+  return FLOORS.reduce(function(a,b){ return floorScores[a]<floorScores[b]?a:b; });
+}
+
+function euclid3RSSI(a, b){
+  return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
+}
+
+// ── PSO แบบ Hybrid — รันเฉพาะชั้นที่ KNN บอก ──
+function psoRunHybrid(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
+  var results = [];
+  for(var r=0; r<R; r++){
+    results.push(psoRunOneFloor(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, etaLos, etaNlos));
+  }
+  // เฉลี่ย XY จากทุก run
+  var avgX = results.reduce(function(s,r){return s+r.gx;},0)/results.length;
+  var avgY = results.reduce(function(s,r){return s+r.gy;},0)/results.length;
+  var best = results.reduce(function(a,b){ return a.gcost<b.gcost?a:b; });
+  return {
+    gx:+(avgX.toFixed(2)), gy:+(avgY.toFixed(2)),
+    gcost:+(best.gcost.toFixed(3)), predFloor:targetFloor,
+    iterFitness:best.iterFitness
+  };
+}
+
+function psoRunOneFloor(mobileRSSI, mobile, fl, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
+  var scatterX=36, scatterY=27;
+  var pz = FLOOR_Z[fl] || 0;
+  var nFloors = floorsThrough(mobile.id, fl);
+  var faf = nFloors * FAF_PER_FLOOR;
+  var isLos = OPEN_ATRIUM_IDS.has(mobile.id);
+  var etaLo = isLos ? Math.max(1.5, etaLos-0.3) : Math.max(2.0, etaNlos-0.5);
+  var etaHi = isLos ? etaLos+0.3 : etaNlos+0.5;
+
+  var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
+  var particles = [];
+
+  // Seed: PR ชั้นนั้น ± jitter เล็กน้อย
+  flPRs.forEach(function(s){
+    particles.push({
+      x:s.x+rand(-2,2), y:s.y+rand(-2,2), z:pz,
+      eta:rand(etaLo,etaHi), vx:0, vy:0, bx:s.x, by:s.y, bc:Infinity
+    });
+  });
+  // เติม random จนครบ n
+  while(particles.length < n){
+    particles.push({
+      x:rand(0,scatterX), y:rand(0,scatterY), z:pz,
+      eta:rand(etaLo,etaHi), vx:0, vy:0,
+      bx:rand(0,scatterX), by:rand(0,scatterY), bc:Infinity
+    });
+  }
+
+  particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf); p.bx=p.x; p.by=p.y;});
+  var gbest = getBest(particles);
+  var iterFitness = [];
+
+  for(var k=1; k<=K; k++){
+    var w = wmax - k*(wmax-wmin)/K;
+    particles.forEach(function(p){
+      var r1=Math.random(), r2=Math.random();
+      p.vx = w*p.vx + c1*r1*(p.bx-p.x) + c2*r2*(gbest.x-p.x);
+      p.vy = w*p.vy + c1*r1*(p.by-p.y) + c2*r2*(gbest.y-p.y);
+      p.vx = Math.max(-3, Math.min(3, p.vx));
+      p.vy = Math.max(-3, Math.min(3, p.vy));
+      p.x = Math.max(0, Math.min(scatterX, p.x+p.vx));
+      p.y = Math.max(0, Math.min(scatterY, p.y+p.vy));
+      var cost = fitness(p, mobileRSSI, faf);
+      if(cost < p.bc){ p.bc=cost; p.bx=p.x; p.by=p.y; }
+      if(cost < gbest.bc){ gbest={x:p.x,y:p.y,bc:cost}; }
+    });
+    iterFitness.push(gbest.bc);
+  }
+  return { gx:gbest.x, gy:gbest.y, gcost:gbest.bc, iterFitness:iterFitness };
+}
+
+// ── FLOOR / ENVIRONMENT CONFIG ──
+var FLOOR_Z = {'Floor 4':0, 'Floor 3':3.0, 'Floor 2':6.0, 'Floor 1':9.0};
+var FAF_PER_FLOOR = 15.0;
+
+// PLd0 calibrated จากการวัดจริงที่ d0=1m → -53 dBm (fixed, ไม่สุ่ม)
+var PLd0_CALIBRATED = -53.0;
+
+// PR ที่อยู่ในโถงเปิด LoS ตรงจาก AN ชั้น 4
+var OPEN_ATRIUM_IDS = new Set(['PR40','PR41','PR42','PR43','PR44','PR45','PR46','PR47','PR55']);
+
+function floorsThrough(prId, targetFloor){
+  if(OPEN_ATRIUM_IDS.has(prId)) return 0;
+  var fn = parseInt(targetFloor.replace('Floor ',''));
+  return Math.max(0, 4 - fn);
+}
+
+function dist3D(px, py, pz, ax, ay){
+  return Math.max(Math.sqrt((px-ax)**2+(py-ay)**2+pz**2), 0.01);
+}
+
+function fitness(p, mobileRSSI, faf){
+  var pz = p.z || 0;
+  var total = 0;
+  ANCHORS.forEach(function(an, i){
+    var d = dist3D(p.x, p.y, pz, an.x, an.y);
+    // PLd0 fixed = -43, eta ยังให้ PSO ปรับได้ในช่วง narrow
+    var predicted = PLd0_CALIBRATED - 10*p.eta*Math.log10(d/1.0) - (faf||0);
+    if(predicted > -90) predicted = -110;
+    total += Math.sqrt((predicted - mobileRSSI[i])**2);
+  });
+  return total;
+}
+
+// Backsolve eta จาก PR ชั้น 4 ทั้งหมด (รู้พิกัดและอยู่ชั้นเดียวกับ AN)
+// RSSI = PLd0 - 10η·log10(d) → η = (PLd0 - RSSI) / (10·log10(d))
+function backsolveEta(){
+  var f4prs = PR_DB.filter(function(p){return p.floor==='Floor 4';});
+  var etaVals = [];
+  f4prs.forEach(function(pr){
+    ANCHORS.forEach(function(an, i){
+      var d = dist3D(pr.x, pr.y, 0, an.x, an.y); // z=0 ชั้น 4
+      if(d < 0.5) return; // ใกล้เกินไป
+      // ใช้ mRSSI (วัดจริง)
+      var rssi = pr.mRSSI[i];
+      if(rssi <= -100) return; // no signal
+      var eta = (PLd0_CALIBRATED - rssi) / (10 * Math.log10(d));
+      if(eta > 1.0 && eta < 6.0) etaVals.push(eta);
+    });
+  });
+  if(!etaVals.length) return {los:2.2, nlos:3.8};
+  etaVals.sort(function(a,b){return a-b;});
+  // LoS eta = ค่าน้อยๆ (lower quartile), NLoS = ค่ามากๆ (upper quartile)
+  var q1 = etaVals[Math.floor(etaVals.length*0.25)];
+  var q3 = etaVals[Math.floor(etaVals.length*0.75)];
+  var med = etaVals[Math.floor(etaVals.length*0.5)];
+  return {los: +Math.max(1.5, q1).toFixed(2), nlos: +Math.min(5.5, q3).toFixed(2), med: +med.toFixed(2)};
+}
+
+function psoRunOnce(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
+  var scatterX=36, scatterY=27;
+  var bestFloor=null, bestGbest=null, bestCost=Infinity;
+  var bestIterFitness=[];
+
+  FLOORS.forEach(function(fl){
+    var pz = FLOOR_Z[fl] || 0;
+    var nFloors = floorsThrough(mobile.id, fl);
+    var faf = nFloors * FAF_PER_FLOOR;
+    var isLos = OPEN_ATRIUM_IDS.has(mobile.id) && fl==='Floor 1';
+    // eta range: LoS ช่วงแคบรอบค่า calibrated, NLoS ช่วงกว้างขึ้น
+    var etaLo = isLos ? Math.max(1.5, etaLos-0.3) : Math.max(2.0, etaNlos-0.5);
+    var etaHi = isLos ? etaLos+0.3 : etaNlos+0.5;
+
+    var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
+    var particles = [];
+    // Seed: PR ของชั้นนั้น (ตำแหน่งรู้จริง)
+    flPRs.forEach(function(s){
+      particles.push({
+        x:s.x+rand(-2,2), y:s.y+rand(-2,2), z:pz,
+        eta:rand(etaLo, etaHi),
+        vx:0, vy:0, bx:s.x, by:s.y, bc:Infinity
+      });
+    });
+    // เติมสุ่มจนครบ n
+    while(particles.length < n){
+      particles.push({
+        x:rand(0,scatterX), y:rand(0,scatterY), z:pz,
+        eta:rand(etaLo, etaHi),
+        vx:0, vy:0, bx:rand(0,scatterX), by:rand(0,scatterY), bc:Infinity
+      });
+    }
+
+    particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf); p.bx=p.x; p.by=p.y;});
+    var gbest = getBest(particles);
+    var iterFitness = [];
+
+    for(var k=1; k<=K; k++){
+      var w = wmax - k*(wmax-wmin)/K;
+      particles.forEach(function(p){
+        var r1=Math.random(), r2=Math.random();
+        p.vx = w*p.vx + c1*r1*(p.bx-p.x) + c2*r2*(gbest.x-p.x);
+        p.vy = w*p.vy + c1*r1*(p.by-p.y) + c2*r2*(gbest.y-p.y);
+        p.x = Math.max(0, Math.min(scatterX, p.x+p.vx));
+        p.y = Math.max(0, Math.min(scatterY, p.y+p.vy));
+        // velocity clamp
+        p.vx = Math.max(-3, Math.min(3, p.vx));
+        p.vy = Math.max(-3, Math.min(3, p.vy));
+        var cost = fitness(p, mobileRSSI, faf);
+        if(cost < p.bc){ p.bc=cost; p.bx=p.x; p.by=p.y; }
+        if(cost < gbest.bc){ gbest={x:p.x,y:p.y,bc:cost}; }
+      });
+      iterFitness.push(gbest.bc);
+    }
+
+    if(gbest.bc < bestCost){
+      bestCost=gbest.bc; bestFloor=fl;
+      bestGbest=gbest; bestIterFitness=iterFitness;
+    }
+  });
+
+  return{
+    gx:bestGbest.x, gy:bestGbest.y,
+    gcost:bestCost, predFloor:bestFloor,
+    iterFitness:bestIterFitness
+  };
+}
+
+// Multi-run: รัน R ครั้ง แล้วเฉลี่ย gbest XY เพื่อลด variance
+function psoRun(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
+  var runs = [];
+  for(var r=0; r<R; r++){
+    runs.push(psoRunOnce(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, etaLos, etaNlos));
+  }
+  // เลือก floor จาก majority vote
+  var floorVotes = {};
+  runs.forEach(function(r){ floorVotes[r.predFloor]=(floorVotes[r.predFloor]||0)+1; });
+  var bestFloor = Object.keys(floorVotes).reduce(function(a,b){ return floorVotes[a]>floorVotes[b]?a:b; });
+  // เฉลี่ย XY เฉพาะ run ที่ทำนายชั้นถูก
+  var winners = runs.filter(function(r){ return r.predFloor===bestFloor; });
+  if(!winners.length) winners=runs;
+  var avgX = winners.reduce(function(s,r){return s+r.gx;},0)/winners.length;
+  var avgY = winners.reduce(function(s,r){return s+r.gy;},0)/winners.length;
+  var bestRun = runs.reduce(function(a,b){ return a.gcost<b.gcost?a:b; });
+  return{
+    gx:+(avgX.toFixed(2)), gy:+(avgY.toFixed(2)),
+    gcost:+(bestRun.gcost.toFixed(3)), predFloor:bestFloor,
+    iterFitness:bestRun.iterFitness
+  };
+}
+
+function getBest(particles){
+  return particles.reduce(function(b,p){
+    return p.bc<b.bc?{x:p.x,y:p.y,z:p.z||0,bc:p.bc}:b;
+  },{x:0,y:0,z:0,bc:Infinity});
+}
+
+function rand(a,b){return a+Math.random()*(b-a);}
+
+// ── BACKSOLVE η ──
+document.getElementById('btn-backsolve').addEventListener('click', function(){
+  var result = backsolveEta();
+  document.getElementById('eta-los').value  = result.los;
+  document.getElementById('eta-nlos').value = result.nlos;
+  document.getElementById('tune-status').style.display = 'block';
+  document.getElementById('tune-status').textContent =
+    'Backsolve จาก PR F4 ทั้ง '+PR_DB.filter(function(p){return p.floor==='Floor 4';}).length+' ตัว → ηLoS='+result.los+' · ηNLoS='+result.nlos+' · ηMed='+result.med;
+});
+
+// ── AUTO-TUNE ──
+document.getElementById('btn-auto-tune').addEventListener('click',function(){
+  setStatus('running','Auto-Tuning...');
+  document.getElementById('tune-status').style.display='block';
+  document.getElementById('tune-log').style.display='none';
+  document.getElementById('tune-status').textContent='กำลังทดสอบ combinations...';
+  setTimeout(function(){
+    var solved = backsolveEta();
+    var etaL = solved.los, etaN = solved.nlos;
+
+    var candidates=[
+      {wmin:0.4,wmax:0.9,c1:2.0,c2:2.0},
+      {wmin:0.4,wmax:0.9,c1:1.5,c2:1.5},
+      {wmin:0.3,wmax:0.9,c1:2.0,c2:2.0},
+      {wmin:0.2,wmax:0.8,c1:2.0,c2:2.0},
+      {wmin:0.4,wmax:0.8,c1:1.5,c2:2.0},
+      {wmin:0.5,wmax:0.9,c1:2.0,c2:1.5},
+      {wmin:0.3,wmax:0.7,c1:1.8,c2:1.8},
+      {wmin:0.4,wmax:0.9,c1:2.5,c2:2.5},
+      {wmin:0.2,wmax:0.9,c1:1.5,c2:2.5},
+      {wmin:0.5,wmax:0.8,c1:2.0,c2:2.0},
+    ];
+    var bestParams=null, bestAvgErr=Infinity;
+    var results=[];
+    var n  = parseInt(document.getElementById('pso-n').value) || 100;
+    var K  = parseInt(document.getElementById('pso-k').value) || 30;
+    var R  = Math.min(parseInt(document.getElementById('pso-runs').value)||5, 3); // cap at 3 for speed
+
+    // sample 1 ใน 5 PR เพื่อความเร็ว
+    var sample = PR_DB.filter(function(_,i){return i%5===0;});
+
+    candidates.forEach(function(c){
+      var totalErr=0;
+      sample.forEach(function(mob){
+        var r = psoRun(mob.pRSSI, mob, n, K, c.wmin, c.wmax, c.c1, c.c2, R, etaL, etaN);
+        totalErr += Math.sqrt((r.gx-mob.x)**2+(r.gy-mob.y)**2);
+      });
+      var avgE = totalErr/sample.length;
+      results.push({params:c, err:avgE});
+      if(avgE < bestAvgErr){ bestAvgErr=avgE; bestParams=c; }
+    });
+
+    document.getElementById('pso-wmin').value = bestParams.wmin;
+    document.getElementById('pso-wmax').value = bestParams.wmax;
+    document.getElementById('pso-c1').value   = bestParams.c1;
+    document.getElementById('pso-c2').value   = bestParams.c2;
+    document.getElementById('eta-los').value  = etaL;
+    document.getElementById('eta-nlos').value = etaN;
+
+    var rank = results.slice().sort(function(a,b){return a.err-b.err;});
+    var report = 'PLd0=-53 (calibrated) · ηLoS='+etaL+' · ηNLoS='+etaN+'\n\n';
+    report += rank.slice(0,5).map(function(r,i){
+      return (i+1)+'. w=['+r.params.wmin+','+r.params.wmax+'] c1='+r.params.c1+' c2='+r.params.c2+' → avgErr='+r.err.toFixed(2)+'m';
+    }).join('\n');
+
+    document.getElementById('tune-status').textContent =
+      'เสร็จ ✓ เลือก w=['+bestParams.wmin+','+bestParams.wmax+'] c1='+bestParams.c1+' c2='+bestParams.c2+' (avgErr='+bestAvgErr.toFixed(2)+'m)';
+    document.getElementById('tune-log').style.display='block';
+    document.getElementById('tune-log').textContent=report;
+    setStatus('done','Auto-Tune เสร็จสิ้น');
+  },50);
+});
+
+function renderPSOResults(){
+  var t = psoLogs.length;
+  var okM  = psoLogs.filter(function(l){return l.predFloorM===l.floor;}).length;
+  var okR  = psoLogs.filter(function(l){return l.predFloorR===l.floor;}).length;
+  var avgErrM = (psoLogs.reduce(function(s,l){return s+l.xyErrM;},0)/t).toFixed(2);
+  var avgErrR = (psoLogs.reduce(function(s,l){return s+l.xyErrR;},0)/t).toFixed(2);
+  // error <4m count
+  var lt4M = psoLogs.filter(function(l){return l.xyErrM<4;}).length;
+  var lt4R = psoLogs.filter(function(l){return l.xyErrR<4;}).length;
+
+  document.getElementById('pso-acc-m').textContent    = ((okM/t)*100).toFixed(1)+'%';
+  document.getElementById('pso-acc-r').textContent    = ((okR/t)*100).toFixed(1)+'%';
+  document.getElementById('pso-avg-err-m').textContent = avgErrM+' m';
+  document.getElementById('pso-avg-err-r').textContent = avgErrR+' m';
+  document.getElementById('pso-lt4-m').textContent   = lt4M+'/'+t+' PR';
+  document.getElementById('pso-lt4-r').textContent   = lt4R+'/'+t+' PR';
+  document.getElementById('pso-count').textContent    = t+' Particles';
+
+  // Converge chart
+  mkChart('psoConvergeChart',{type:'line',data:{labels:psoIterAvg.map(function(_,i){return 'Iter '+(i+1);}),datasets:[
+    {label:'Avg Fitness',data:psoIterAvg,borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.08)',pointBackgroundColor:'#a855f7',pointRadius:4,fill:true,tension:.35,borderWidth:2}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+
+  // PSO Table
+  var fp={'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+  var tbody=document.getElementById('pso-table-body'); tbody.innerHTML='';
+  psoLogs.forEach(function(log){
+    var fn=log.floor.replace('Floor ','');
+    var ecM=log.xyErrM<2?'var(--ok)':log.xyErrM<4?'var(--amber)':'var(--err)';
+    var ecR=log.xyErrR<2?'var(--ok)':log.xyErrR<4?'var(--amber)':'var(--err)';
+    var okFM = log.predFloorM===log.floor;
+    var okFR = log.predFloorR===log.floor;
+    tbody.innerHTML+=
+      '<tr>'+
+      '<td><span class="floor-pill '+(fp[fn]||'')+'">'+log.floor+'</span></td>'+
+      '<td style="color:var(--muted)">'+log.id+'</td>'+
+      '<td style="color:var(--muted);font-size:10px">'+log.knnFloorM+'</td>'+
+      '<td>'+(okFM?'<span class="badge badge-ok">'+log.predFloorM+'</span>':'<span class="badge badge-err">'+log.predFloorM+'</span>')+'</td>'+
+      '<td style="color:var(--muted)">'+log.gxM+', '+log.gyM+'</td>'+
+      '<td style="color:'+ecM+';font-weight:600">'+log.xyErrM.toFixed(2)+'</td>'+
+      '<td style="color:var(--muted);font-size:10px">'+log.knnFloorR+'</td>'+
+      '<td>'+(okFR?'<span class="badge badge-ok">'+log.predFloorR+'</span>':'<span class="badge badge-err">'+log.predFloorR+'</span>')+'</td>'+
+      '<td style="color:var(--muted)">'+log.gxR+', '+log.gyR+'</td>'+
+      '<td style="color:'+ecR+';font-weight:600">'+log.xyErrR.toFixed(2)+'</td>'+
+      '</tr>';
+  });
+
+  document.getElementById('pso-results-section').classList.remove('hidden');
+  renderMaps();
+}
+
+// ── FLOOR MAPS ──
+var mapColors={
+  'Floor 1':'#f59e0b','Floor 2':'#3b82f6','Floor 3':'#10b981','Floor 4':'#a855f7'
+};
+var floorCanvases={'Floor 1':'map-f1','Floor 2':'map-f2','Floor 3':'map-f3','Floor 4':'map-f4'};
+
+function renderMaps(){
+  FLOORS.forEach(function(fl){
+    var cid=floorCanvases[fl];
+    var el=document.getElementById(cid);
+    if(!el)return;
+    var wrap=el.parentElement;
+    var W=wrap.clientWidth||360;
+    var H=W*(28/36);
+    el.width=W*2; el.height=H*2;
+    el.style.width=W+'px'; el.style.height=H+'px';
+    var ctx=el.getContext('2d');
+    ctx.scale(2,2);
+
+    var PAD=24;
+    var drawW=W-PAD*2, drawH=H-PAD*2;
+    var mapX=36, mapY=27;
+
+    function cx(rx){return PAD+rx/mapX*drawW;}
+    function cy(ry){return PAD+(mapY-ry)/mapY*drawH;}
+
+    ctx.fillStyle='#0d1220';
+    ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,0.08)';
+    ctx.lineWidth=0.5;
+    ctx.strokeRect(PAD,PAD,drawW,drawH);
+
+    var flPRs=PR_DB.filter(function(p){return p.floor===fl;});
+    var isF4 = fl==='Floor 4';
+
+    // ── Floor 4 only: draw triangle lines from each AN to the other 2 ANs ──
+    if(isF4){
+      ctx.strokeStyle='rgba(168,85,247,0.35)';
+      ctx.lineWidth=0.8;
+      ctx.setLineDash([4,3]);
+      // Triangle: AN1-AN2, AN2-AN3, AN3-AN1
+      [[0,1],[1,2],[2,0]].forEach(function(pair){
+        ctx.beginPath();
+        ctx.moveTo(cx(ANCHORS[pair[0]].x), cy(ANCHORS[pair[0]].y));
+        ctx.lineTo(cx(ANCHORS[pair[1]].x), cy(ANCHORS[pair[1]].y));
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+    }
+
+    // ── Floor 4: draw lines from each AN to all PRs on this floor ──
+    if(isF4){
+      flPRs.forEach(function(pr){
+        ANCHORS.forEach(function(an){
+          ctx.beginPath();
+          ctx.moveTo(cx(an.x), cy(an.y));
+          ctx.lineTo(cx(pr.x), cy(pr.y));
+          ctx.strokeStyle='rgba(168,85,247,0.08)';
+          ctx.lineWidth=0.5;
+          ctx.stroke();
         });
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) handleLiveFile(e.target.files[0]);
-        });
+      });
+    }
 
-        function handleLiveFile(file) {
-            engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 mt-1";
-            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-spin"></span> Processing Live Engine...`;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const rawRows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-                    
-                    executeKnnEngine(rawRows);
-                } catch (err) {
-                    engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 mt-1";
-                    engineStatus.innerHTML = `❌ Error Parsing Data`;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
+    // ── Draw PR points ──
+    flPRs.forEach(function(pr){
+      var pcx=cx(pr.x), pcy=cy(pr.y);
+      var knnLog=knnLogs.find(function(l){return l.id===pr.id;});
+      var psoLog=psoLogs.find(function(l){return l.id===pr.id;});
+      var dotColor='rgba(255,255,255,0.25)';
 
-        let accChart = null;
-        let errChart = null;
+      if(knnLog){
+        var anyWrong=[knnLog.mTop3,knnLog.mAvg,knnLog.rTop3,knnLog.rAvg].some(function(v){return v!=='ถูก';});
+        dotColor=anyWrong?'#ef4444':'#22c55e';
+      }
 
-        function executeKnnEngine(rawRows) {
-            let cleanData = [];
-            
-            for (let i = 0; i < rawRows.length; i++) {
-                let row = rawRows[i];
-                if (row && row[0] && String(row[0]).trim().startsWith('Floor')) {
-                    let floorStr = String(row[0]).trim();
-                    let partStr = row[1] ? String(row[1]).trim() : '';
-                    
-                    if (partStr.toLowerCase().startsWith('particle')) continue;
+      // Open atrium PR gets a different border
+      var isOpen=OPEN_ATRIUM_IDS.has(pr.id);
+      ctx.beginPath();
+      ctx.arc(pcx,pcy,isOpen?5:4,0,Math.PI*2);
+      ctx.fillStyle=dotColor;
+      ctx.fill();
+      if(isOpen){
+        ctx.strokeStyle='#f59e0b';
+        ctx.lineWidth=1;
+        ctx.stroke();
+      }
 
-                    let m1 = parseFloat(row[2]); let m2 = parseFloat(row[3]); let m3 = parseFloat(row[4]);
-                    let r1 = parseFloat(row[5]); let r2 = parseFloat(row[6]); let r3 = parseFloat(row[7]);
+      ctx.fillStyle='rgba(255,255,255,0.75)';
+      ctx.font='7px IBM Plex Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(pr.id,pcx,pcy-8);
 
-                    if (isNaN(m1) || isNaN(m2) || isNaN(m3)) continue;
+      // PSO gbest star
+      if(psoLog){
+        var sx=cx(psoLog.gxR), sy=cy(psoLog.gyR);
+        ctx.beginPath();
+        ctx.arc(sx,sy,3,0,Math.PI*2);
+        ctx.fillStyle='#facc15';
+        ctx.fill();
+      }
+    });
 
-                    cleanData.push({
-                        actualFloor: floorStr,
-                        particleId: partStr,
-                        meas: [m1, m2, m3],
-                        rssi: [isNaN(r1) ? 0 : r1, isNaN(r2) ? 0 : r2, isNaN(r3) ? 0 : r3]
-                    });
-                }
-            }
+    // ── Draw Anchor Nodes — triangle shape, Floor 4 ONLY ──
+    if(isF4){
+      ANCHORS.forEach(function(an){
+        var acx=cx(an.x), acy=cy(an.y);
+        var s=7; // half-size
+        ctx.beginPath();
+        ctx.moveTo(acx, acy-s);
+        ctx.lineTo(acx+s, acy+s);
+        ctx.lineTo(acx-s, acy+s);
+        ctx.closePath();
+        ctx.fillStyle='#a855f7';
+        ctx.fill();
+        ctx.strokeStyle='#d8b4fe';
+        ctx.lineWidth=0.8;
+        ctx.stroke();
+        ctx.fillStyle='rgba(255,255,255,0.9)';
+        ctx.font='bold 7px IBM Plex Mono,monospace';
+        ctx.textAlign='center';
+        ctx.fillText(an.id,acx,acy-s-3);
+      });
+    }
 
-            if (cleanData.length === 0) {
-                engineStatus.innerHTML = `❌ No valid data rows found`;
-                return;
-            }
+    // Floor label
+    ctx.fillStyle=mapColors[fl];
+    ctx.font='bold 9px Noto Sans Thai,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(fl+' ('+flPRs.length+' PR)',PAD+2,PAD-6);
+  });
+}
 
-            // ล้างข้อมูลเก่าออกก่อนเริ่มจัดเก็บชุดใหม่ลงในระดับ Window Context
-            window.globalLogsData = [];
-            let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
-            
-            let detailErrors = {
-                'Floor 1': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
-                'Floor 2': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
-                'Floor 3': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
-                'Floor 4': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 }
-            };
+// ── CHART HELPER ──
+function mkChart(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id).getContext('2d'),cfg);}
 
-            document.getElementById('total-records').textContent = `${cleanData.length} PARTICLES`;
+// ── EXPORT KNN ──
+document.getElementById('btn-export').addEventListener('click',function(){
+  if(!knnLogs.length){alert('ไม่พบข้อมูล KNN');return;}
+  var rows=knnLogs.map(function(l){return{'Floor จริง':l.floor,'Particle ID':l.id,'Measurement (TOP 3)':l.mTop3,'Measurement (AVG รวม)':l.mAvg,'RSSI Predict (TOP 3)':l.rTop3,'RSSI Predict (AVG รวม)':l.rAvg,'คลาดเคลื่อน Meas.Top3':l.gMT3,'คลาดเคลื่อน Meas.Avg':l.gMA,'คลาดเคลื่อน RSSI.Top3':l.gRT3,'คลาดเคลื่อน RSSI.Avg':l.gRA};});
+  var ws1=XLSX.utils.json_to_sheet(rows);
+  ws1['!cols']=[14,12,22,22,22,22,20,20,20,20].map(function(w){return{wch:w};});
 
-            cleanData.forEach((mobile) => {
-                let actualFloor = mobile.actualFloor;
-                let mDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
-                let rDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
+  var t=knnLogs.length;
+  var ok=function(k){return knnLogs.filter(function(l){return l[k]==='ถูก';}).length;};
+  var sum=[{วิธี:'Measurement (TOP 3)',ถูก:ok('mTop3'),ผิด:t-ok('mTop3'),Total:t,'%':((ok('mTop3')/t)*100).toFixed(2)+'%'},{วิธี:'Measurement (AVG)',ถูก:ok('mAvg'),ผิด:t-ok('mAvg'),Total:t,'%':((ok('mAvg')/t)*100).toFixed(2)+'%'},{วิธี:'RSSI Predict (TOP 3)',ถูก:ok('rTop3'),ผิด:t-ok('rTop3'),Total:t,'%':((ok('rTop3')/t)*100).toFixed(2)+'%'},{วิธี:'RSSI Predict (AVG)',ถูก:ok('rAvg'),ผิด:t-ok('rAvg'),Total:t,'%':((ok('rAvg')/t)*100).toFixed(2)+'%'}];
+  var ws2=XLSX.utils.json_to_sheet(sum);
+  ws2['!cols']=[26,8,8,8,10].map(function(w){return{wch:w};});
 
-                cleanData.forEach((target) => {
-                    let targetFloor = target.actualFloor;
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws1,'ผลการคำนวณ KNN');
+  XLSX.utils.book_append_sheet(wb,ws2,'สรุปความถูกต้อง');
+  XLSX.writeFile(wb,'PSOCalc_KNN_Report.xlsx');
+});
 
-                    let distM = Math.sqrt(Math.pow(mobile.meas[0]-target.meas[0],2) + Math.pow(mobile.meas[1]-target.meas[1],2) + Math.pow(mobile.meas[2]-target.meas[2],2));
-                    let distR = Math.sqrt(Math.pow(mobile.rssi[0]-target.rssi[0],2) + Math.pow(mobile.rssi[1]-target.rssi[1],2) + Math.pow(mobile.rssi[2]-target.rssi[2],2));
+// ── EXPORT PSO ──
+document.getElementById('btn-export-pso').addEventListener('click',function(){
+  if(!psoLogs.length){alert('กรุณารัน PSO ก่อน');return;}
+  var rows=psoLogs.map(function(l){return{
+    'Floor จริง':l.floor,'Particle ID':l.id,'X จริง':l.px,'Y จริง':l.py,
+    // Measurement
+    'KNN Floor (Meas.)':l.knnFloorM,
+    'PSO ทำนาย (Meas.)':l.predFloorM,
+    'gbest X (Meas.)':l.gxM,'gbest Y (Meas.)':l.gyM,
+    'XY Error Meas. (m)':l.xyErrM.toFixed(3),
+    // RSSI Predict
+    'KNN Floor (RSSI)':l.knnFloorR,
+    'PSO ทำนาย (RSSI)':l.predFloorR,
+    'gbest X (RSSI)':l.gxR,'gbest Y (RSSI)':l.gyR,
+    'XY Error RSSI (m)':l.xyErrR.toFixed(3),
+  };});
+  var ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[14,12,10,10,16,16,12,12,14,16,16,12,12,14].map(function(w){return{wch:w};});
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Hybrid KNN-PSO Results');
+  XLSX.writeFile(wb,'PSOCalc_HybridKNN_PSO_Results.xlsx');
+});
 
-                    mDistances[targetFloor].push(distM);
-                    rDistances[targetFloor].push(distR);
-                });
-
-                function runPredictionLive(distanceMap, isTop3Mode) {
-                    let finalFloorScores = {};
-                    
-                    for (let fl in distanceMap) {
-                        let dList = distanceMap[fl];
-                        if (isTop3Mode) {
-                            let sorted = dList.slice().sort((a, b) => a - b);
-                            let filtered = sorted.filter(v => v > 0);
-                            if (filtered.length < 3) filtered = sorted;
-                            finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 999);
-                        } else {
-                            let totalSum = dList.reduce((a, b) => a + b, 0);
-                            finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 999;
-                        }
-                    }
-
-                    let predicted = Object.keys(finalFloorScores).reduce((a, b) => finalFloorScores[a] < finalFloorScores[b] ? a : b);
-                    return predicted === actualFloor ? "ถูก" : `ชั้น ${predicted.replace('Floor ', '')}`;
-                }
-
-                let p_m_top3 = runPredictionLive(mDistances, true);
-                let p_m_avg  = runPredictionLive(mDistances, false);
-                let p_r_top3 = runPredictionLive(rDistances, true);
-                let p_r_avg  = runPredictionLive(rDistances, false);
-
-                if (p_m_top3 === "ถูก") counts.mTop3++; else detailErrors[actualFloor].mTop3++;
-                if (p_m_avg === "ถูก") counts.mAvg++; else detailErrors[actualFloor].mAvg++;
-                if (p_r_top3 === "ถูก") counts.rTop3++; else detailErrors[actualFloor].rTop3++;
-                if (p_r_avg === "ถูก") counts.rAvg++; else detailErrors[actualFloor].rAvg++;
-
-                // บันทึกเข้า Array ของหน้าต่างหลักโดยตรงเพื่อป้องกันการสูญหายของหน่วยความจำ
-                window.globalLogsData.push({
-                    floor: actualFloor, id: mobile.particleId,
-                    mTop3: p_m_top3, mAvg: p_m_avg, rTop3: p_r_top3, rAvg: p_r_avg
-                });
-            });
-
-            const pct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
-            document.getElementById('acc-m-top3').textContent = pct(counts.mTop3, counts.total);
-            document.getElementById('acc-m-avg').textContent = pct(counts.mAvg, counts.total);
-            document.getElementById('acc-r-top3').textContent = pct(counts.rTop3, counts.total);
-            document.getElementById('acc-r-avg').textContent = pct(counts.rAvg, counts.total);
-
-            const tbody = document.getElementById('table-output');
-            tbody.innerHTML = "";
-            window.globalLogsData.forEach(log => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/40 transition-colors border-b border-gray-800/50 text-xs sm:text-sm";
-                
-                const badgeStyle = (val) => val === 'ถูก' 
-                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold' 
-                    : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-md font-semibold';
-
-                let floorBadgeClass = "bg-gray-800 text-gray-300 border border-gray-700";
-                if (log.floor.includes('1')) floorBadgeClass = "bg-red-500/10 text-red-400 border border-red-500/30";
-                else if (log.floor.includes('2')) floorBadgeClass = "bg-orange-500/10 text-orange-400 border border-orange-500/30";
-                else if (log.floor.includes('3')) floorBadgeClass = "bg-blue-500/10 text-blue-400 border border-blue-500/30";
-                else if (log.floor.includes('4')) floorBadgeClass = "bg-purple-500/10 text-purple-400 border border-purple-500/30";
-
-                tr.innerHTML = `
-                    <td class="p-4 font-bold"><span class="px-2.5 py-1 rounded-md text-xs tracking-wide block text-center ${floorBadgeClass}">${log.floor}</span></td>
-                    <td class="p-4 text-gray-400">${log.id}</td>
-                    <td class="p-4 bg-blue-950/5"><span class="${badgeStyle(log.mTop3)}">${log.mTop3}</span></td>
-                    <td class="p-4 bg-orange-950/5"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
-                    <td class="p-4 bg-emerald-950/5"><span class="${badgeStyle(log.rTop3)}">${log.rTop3}</span></td>
-                    <td class="p-4 bg-pink-950/5"><span class="${badgeStyle(log.rAvg)}">${log.rAvg}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            renderHighContrastCharts(counts, detailErrors);
-            analysisSection.classList.remove('hidden');
-            
-            engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 mt-1";
-            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Analysis Complete`;
-        }
-
-        function renderHighContrastCharts(counts, detailErrors) {
-            const ctx1 = document.getElementById('accuracyChart').getContext('2d');
-            const ctx2 = document.getElementById('errorFloorChart').getContext('2d');
-
-            if(accChart) accChart.destroy();
-            if(errChart) errChart.destroy();
-
-            // รหัสสีคอนทราสต์ชัดเจน: น้ำเงินสว่าง / ส้มอิฐ / เขียวมรกต / ชมพูเข้มสด
-            const themeColors = ['#2563eb', '#ea580c', '#10b981', '#db2777'];
-
-            accChart = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: ['Measurement (Top 3)', 'Measurement (Avg)', 'Predict (Top 3)', 'Predict (Avg)'],
-                    datasets: [{
-                        data: [
-                            ((counts.mTop3 / counts.total) * 100),
-                            ((counts.mAvg / counts.total) * 100),
-                            ((counts.rTop3 / counts.total) * 100),
-                            ((counts.rAvg / counts.total) * 100)
-                        ],
-                        backgroundColor: themeColors,
-                        borderRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { min: 0, max: 100, grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 10 } } }
-                    }
-                }
-            });
-
-            const floorLabels = ['Floor 1', 'Floor 2', 'Floor 3', 'Floor 4'];
-            errChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: floorLabels,
-                    datasets: [
-                        {
-                            label: 'Measurement 3 ค่า หาร 3',
-                            data: floorLabels.map(f => detailErrors[f].mTop3),
-                            backgroundColor: themeColors[0],
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Measurement Avg. รวม',
-                            data: floorLabels.map(f => detailErrors[f].mAvg),
-                            backgroundColor: themeColors[1],
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Predict 3 ค่า หาร 3',
-                            data: floorLabels.map(f => detailErrors[f].rTop3),
-                            backgroundColor: themeColors[2],
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'Predict Avg. รวม',
-                            data: floorLabels.map(f => detailErrors[f].rAvg),
-                            backgroundColor: themeColors[3],
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { 
-                            display: true,
-                            labels: { color: '#9ca3af', font: { size: 11 } }
-                        } 
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { color: '#1f2937' }, 
-                            ticks: { color: '#9ca3af', stepSize: 1 } 
-                        },
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-                    }
-                }
-            });
-        }
-
-        // ตัวคุมคำสั่งคลิกปุ่มส่งออกแบบปลอดภัย 100% ดึงตัวแปรโดยตรงมาเขียนลงตารางภาษาไทยสอดคล้องเล่มโปรเจกต์
-        btnExport.addEventListener('click', () => {
-            if (!window.globalLogsData || window.globalLogsData.length === 0) {
-                alert("ไม่พบข้อมูลสำหรับการส่งออก กรุณาลากไฟล์เข้ามาคำนวณก่อนครับ");
-                return;
-            }
-            
-            const excelRows = window.globalLogsData.map(item => ({
-                'Floor จริง': item.floor,
-                'Particle ID': item.id,
-                'ผลทำนาย Measurement 3 ค่า หาร 3': item.mTop3,
-                'ผลทำนาย Measurement Avg. รวม': item.mAvg,
-                'ผลทำนาย Predict 3 ค่า หาร 3': item.rTop3,
-                'ผลทำนาย Predict Avg. รวม': item.rAvg
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(excelRows);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN_Prediction_Report");
-
-            // ขยายความกว้างของคอลัมน์เพื่อไม่ให้หัวข้อภาษาไทยยาวๆ โดนบีบจนอ่านไม่ออก
-            const maxProps = [18, 15, 38, 38, 38, 38];
-            worksheet['!cols'] = maxProps.map(w => ({ w: w }));
-
-            XLSX.writeFile(workbook, "KNN_Predict_Dashboard_Report.xlsx");
-        });
-    </script>
+// Init map on page load
+setTimeout(renderMaps,200);
+})();
+</script>
 </body>
 </html>
