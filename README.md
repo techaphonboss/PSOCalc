@@ -26,7 +26,7 @@
         <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.0</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v3.5</span>
                 </div>
                 <h1 class="text-3xl font-black tracking-tight text-white">
                     <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
@@ -58,26 +58,26 @@
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-[#2563eb]"></div>
                     <span class="text-xs font-bold text-blue-400 uppercase block mb-1">Meas. (Top 3 Avg)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-m-top3">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <span class="text-xs font-bold text-indigo-400 uppercase block mb-1">Meas. (Grand Avg)</span>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+                    <span class="text-xs font-bold text-orange-400 uppercase block mb-1">Meas. (Grand Avg)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-m-avg">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-[#10b981]"></div>
                     <span class="text-xs font-bold text-emerald-400 uppercase block mb-1">RSSI (Top 3 Avg)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-r-top3">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
-                    <span class="text-xs font-bold text-teal-400 uppercase block mb-1">RSSI (Grand Avg)</span>
+                    <div class="absolute top-0 left-0 w-1 h-full bg-[#db2777]"></div>
+                    <span class="text-xs font-bold text-pink-400 uppercase block mb-1">RSSI (Grand Avg)</span>
                     <h3 class="text-3xl font-black text-white code-font" id="acc-r-avg">0%</h3>
                     <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
@@ -98,7 +98,7 @@
                 <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="text-base font-bold text-white">📋 ตารางผลการคำนวณระดับชั้นจากสมการ KNN ในเบราว์เซอร์</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">คุณสามารถกดปุ่มเพื่อส่งออกตารางสรุปผลลัพธ์นี้ไปเป็นไฟล์ Excel ได้ทันที</p>
+                        <p class="text-xs text-gray-400 mt-0.5">กดปุ่มเพื่อส่งออกตารางสรุปผลลัพธ์นี้ไปเป็นไฟล์สเปรดชีต Excel</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button id="btn-export" class="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold text-xs px-4 py-2.5 rounded-lg border border-emerald-600/30 flex items-center gap-2 shadow-lg transition-all duration-200">
@@ -112,12 +112,12 @@
                     <table class="w-full text-left border-collapse text-xs md:text-sm">
                         <thead>
                             <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800 backdrop-blur-md">
-                                <th class="p-4">Floor จริง</th>
+                                <th class="p-4 w-32">Floor จริง</th>
                                 <th class="p-4">Particle ID</th>
                                 <th class="p-4 bg-blue-950/20 text-blue-400">Meas (Top 3)</th>
-                                <th class="p-4 bg-indigo-950/20 text-indigo-400">Meas (Avg รวม)</th>
+                                <th class="p-4 bg-orange-950/10 text-orange-400">Meas (Avg รวม)</th>
                                 <th class="p-4 bg-emerald-950/20 text-emerald-400">RSSI (Top 3)</th>
-                                <th class="p-4 bg-teal-950/20 text-teal-400">RSSI (Avg รวม)</th>
+                                <th class="p-4 bg-pink-950/10 text-pink-400">RSSI (Avg รวม)</th>
                             </tr>
                         </thead>
                         <tbody id="table-output" class="divide-y divide-gray-800/60 code-font"></tbody>
@@ -135,7 +135,8 @@
         const analysisSection = document.getElementById('analysis-section');
         const btnExport = document.getElementById('btn-export');
 
-        let globalLogs = []; // เก็บข้อมูลเพื่อรอการ Export
+        // ประกาศตัวแปรเก็บล็อกแบบ Global ไว้นอกขอบเขตฟังก์ชันเพื่อไม่ให้ค่าสูญหาย
+        let globalLogs = []; 
 
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-500/5'); });
@@ -204,10 +205,10 @@
                 return;
             }
 
+            // รีเซ็ตข้อมูลเก็บล็อกระดับ Global ทุกครั้งที่มีการรันข้อมูลใหม่
             globalLogs = [];
             let counts = { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0, total: cleanData.length };
             
-            // แยกโครงสร้างความผิดพลาดแยกตามชั้น และแยกคอลัมน์วิธีอย่างชัดเจน
             let detailErrors = {
                 'Floor 1': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
                 'Floor 2': { mTop3: 0, mAvg: 0, rTop3: 0, rAvg: 0 },
@@ -262,6 +263,7 @@
                 if (p_r_top3 === "ถูก") counts.rTop3++; else detailErrors[actualFloor].rTop3++;
                 if (p_r_avg === "ถูก") counts.rAvg++; else detailErrors[actualFloor].rAvg++;
 
+                // ผลักออบเจกต์คำตอบเข้าสู่ตัวแปรภายนอกโดยตรง
                 globalLogs.push({
                     floor: actualFloor, id: mobile.particleId,
                     mTop3: p_m_top3, mAvg: p_m_avg, rTop3: p_r_top3, rAvg: p_r_avg
@@ -284,30 +286,40 @@
                     ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold' 
                     : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-md font-semibold';
 
+                // ฟังก์ชันแยกสีของ Badge คอลัมน์ Floor จริง
+                let floorBadgeClass = "bg-gray-800 text-gray-300 border border-gray-700";
+                if (log.floor.includes('1')) floorBadgeClass = "bg-red-500/10 text-red-400 border border-red-500/30";
+                else if (log.floor.includes('2')) floorBadgeClass = "bg-orange-500/10 text-orange-400 border border-orange-500/30";
+                else if (log.floor.includes('3')) floorBadgeClass = "bg-blue-500/10 text-blue-400 border border-blue-500/30";
+                else if (log.floor.includes('4')) floorBadgeClass = "bg-purple-500/10 text-purple-400 border border-purple-500/30";
+
                 tr.innerHTML = `
-                    <td class="p-4 text-white font-medium">${log.floor}</td>
+                    <td class="p-4 font-bold"><span class="px-2.5 py-1 rounded-md text-xs tracking-wide block text-center ${floorBadgeClass}">${log.floor}</span></td>
                     <td class="p-4 text-gray-400">${log.id}</td>
                     <td class="p-4 bg-blue-950/5"><span class="${badgeStyle(log.mTop3)}">${log.mTop3}</span></td>
-                    <td class="p-4 bg-indigo-950/5"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
+                    <td class="p-4 bg-orange-950/5"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
                     <td class="p-4 bg-emerald-950/5"><span class="${badgeStyle(log.rTop3)}">${log.rTop3}</span></td>
-                    <td class="p-4 bg-teal-950/5"><span class="${badgeStyle(log.rAvg)}">${log.rAvg}</span></td>
+                    <td class="p-4 bg-pink-950/5"><span class="${badgeStyle(log.rAvg)}">${log.rAvg}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            renderGroupedCharts(counts, detailErrors);
+            renderHighContrastCharts(counts, detailErrors);
             analysisSection.classList.remove('hidden');
             
             engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 mt-1";
             engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Analysis Complete`;
         }
 
-        function renderGroupedCharts(counts, detailErrors) {
+        function renderHighContrastCharts(counts, detailErrors) {
             const ctx1 = document.getElementById('accuracyChart').getContext('2d');
             const ctx2 = document.getElementById('errorFloorChart').getContext('2d');
 
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
+
+            // ชุดสี High Contrast ที่ต่างกันสุดขั้ว: น้ำเงิน / ส้ม / เขียว / ชมพู
+            const themeColors = ['#2563eb', '#ea580c', '#10b981', '#db2777'];
 
             accChart = new Chart(ctx1, {
                 type: 'bar',
@@ -320,7 +332,7 @@
                             ((counts.rTop3 / counts.total) * 100),
                             ((counts.rAvg / counts.total) * 100)
                         ],
-                        backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#14b8a6'],
+                        backgroundColor: themeColors,
                         borderRadius: 5
                     }]
                 },
@@ -335,7 +347,6 @@
                 }
             });
 
-            // ปรับแก้เป็นกราฟแยกวิธีตามชั้น (Grouped Bar Chart)
             const floorLabels = ['Floor 1', 'Floor 2', 'Floor 3', 'Floor 4'];
             errChart = new Chart(ctx2, {
                 type: 'bar',
@@ -345,25 +356,25 @@
                         {
                             label: 'Meas (Top 3)',
                             data: floorLabels.map(f => detailErrors[f].mTop3),
-                            backgroundColor: '#3b82f6',
+                            backgroundColor: themeColors[0],
                             borderRadius: 4
                         },
                         {
                             label: 'Meas (Avg)',
                             data: floorLabels.map(f => detailErrors[f].mAvg),
-                            backgroundColor: '#6366f1',
+                            backgroundColor: themeColors[1],
                             borderRadius: 4
                         },
                         {
                             label: 'RSSI (Top 3)',
                             data: floorLabels.map(f => detailErrors[f].rTop3),
-                            backgroundColor: '#10b981',
+                            backgroundColor: themeColors[2],
                             borderRadius: 4
                         },
                         {
                             label: 'RSSI (Avg)',
                             data: floorLabels.map(f => detailErrors[f].rAvg),
-                            backgroundColor: '#14b8a6',
+                            backgroundColor: themeColors[3],
                             borderRadius: 4
                         }
                     ]
@@ -374,7 +385,7 @@
                     plugins: { 
                         legend: { 
                             display: true,
-                            labels: { color: '#9ca3af', font: { size: 10 } }
+                            labels: { color: '#9ca3af', font: { size: 11 } }
                         } 
                     },
                     scales: {
@@ -389,11 +400,13 @@
             });
         }
 
-        // ฟังก์ชันในการ Export ไปยัง Excel
+        // ตัวสคริปต์แก้ไขจุดบกพร่อง ดึงข้อมูล Global สั่งแปลงสเปรดชีต Excel ทันที
         btnExport.addEventListener('click', () => {
-            if (globalLogs.length === 0) return;
+            if (!globalLogs || globalLogs.length === 0) {
+                alert("ไม่พบข้อมูลที่จะส่งออก กรุณาลากไฟล์ข้อมูลดิบลงในระบบก่อนครับ");
+                return;
+            }
             
-            // แปลงข้อมูลเป็นรูปแบบหัวข้อคอลัมน์ภาษาไทยที่สวยงามอ่านง่าย
             const excelRows = globalLogs.map(item => ({
                 'Floor จริง': item.floor,
                 'Particle ID': item.id,
@@ -405,13 +418,11 @@
 
             const worksheet = XLSX.utils.json_to_sheet(excelRows);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN Summary Log");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "KNN_Prediction_Data");
 
-            // ปรับแต่งความกว้างคอลัมน์อัตโนมัติเพื่อให้เปิดใน Excel แล้วอ่านง่าย
-            const maxProps = [20, 15, 30, 30, 30, 30];
+            const maxProps = [18, 15, 28, 28, 28, 28];
             worksheet['!cols'] = maxProps.map(w => ({ w: w }));
 
-            // สั่งทำการดาวน์โหลดไฟล์ออกมาทันที
             XLSX.writeFile(workbook, "KNN_Predict_Dashboard_Report.xlsx");
         });
     </script>
