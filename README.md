@@ -12,15 +12,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        body {
-            font-family: 'Noto Sans Thai', 'JetBrains Mono', sans-serif;
-        }
-        .code-font {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        body { font-family: 'Noto Sans Thai', 'JetBrains Mono', sans-serif; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="bg-[#0b0f19] text-[#f3f4f6] min-h-screen selection:bg-blue-500 selection:text-white">
+<body class="bg-[#0b0f19] text-[#f3f4f6] min-h-screen relative overflow-x-hidden">
 
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -30,15 +26,15 @@
         <header class="mb-10 flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800 pb-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v2.0</span>
+                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-md border border-blue-500/20">LIVE ENGINE v2.5</span>
                 </div>
-                <h1 class="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                <h1 class="text-3xl font-black tracking-tight text-white">
                     <span class="bg-gradient-to-r from-blue-500 to-indigo-400 bg-clip-text text-transparent">PSOCalc</span> Dashboard
                 </h1>
-                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์และประมวลผลอัลกอริทึม KNN สำหรับหาค่าความถูกต้องของชั้นภายในอาคาร (Indoor Positioning System)</p>
+                <p class="text-gray-400 text-sm mt-1">ระบบวิเคราะห์และประมวลผลอัลกอริทึม KNN หาพิกัดความถูกต้องของชั้นภายในอาคาร (Indoor Positioning System)</p>
             </div>
-            <div class="mt-4 md:mt-0 text-left md:text-right">
-                <span class="text-xs text-gray-500 block uppercase font-bold tracking-widest">Current Status</span>
+            <div class="mt-4 md:mt-0">
+                <span class="text-xs text-gray-500 block uppercase font-bold tracking-widest">Engine Status</span>
                 <span id="engine-status" class="inline-flex items-center gap-2 text-xs font-medium bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full border border-amber-500/20 mt-1">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Ready for Analytics
                 </span>
@@ -46,92 +42,78 @@
         </header>
 
         <div class="mb-10">
-            <div id="drop-zone" class="relative group border-2 border-dashed border-gray-700 bg-[#111827]/50 backdrop-blur-md rounded-2xl p-10 text-center hover:border-blue-500 transition-all duration-300 cursor-pointer overflow-hidden shadow-xl">
+            <div id="drop-zone" class="relative group border-2 border-dashed border-gray-700 bg-[#111827]/50 backdrop-blur-md rounded-2xl p-10 text-center hover:border-blue-500 transition-all duration-300 cursor-pointer shadow-xl">
                 <input type="file" id="file-input" accept=".xlsx, .xls, .csv" class="hidden">
-                <div class="relative z-10">
-                    <div class="w-16 h-16 bg-gray-800/80 rounded-xl flex items-center justify-center mx-auto mb-4 border border-gray-700 group-hover:scale-110 group-hover:border-blue-500/50 group-hover:bg-blue-500/10 transition-all duration-300">
+                <div>
+                    <div class="w-16 h-16 bg-gray-800/80 rounded-xl flex items-center justify-center mx-auto mb-4 border border-gray-700 group-hover:bg-blue-500/10 group-hover:border-blue-500/50 transition-all duration-300">
                         <svg class="w-8 h-8 text-gray-400 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                     </div>
-                    <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่</h3>
-                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-2">รองรับไฟล์ <span class="text-blue-400 font-semibold">.xlsx / .csv</span> ที่ได้จากการบันทึกผลสัญญาณ AN1, AN2, AN3</p>
-                    <span class="inline-block text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-md border border-gray-700">ระบบ AI จะคำนวณและประเมินผล ถูก/ผิด ให้ทันทีโดยอัตโนมัติ</span>
+                    <h3 class="text-lg font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่เพื่อคำนวณสด</h3>
+                    <p class="text-gray-400 text-sm max-w-md mx-auto mb-2">รองรับไฟล์แผนผัง <span class="text-blue-400 font-semibold">.xlsx / .csv</span> ตัวสรุปค่าสัญญาณดิบ</p>
                 </div>
             </div>
         </div>
 
-        <div id="analysis-section" class="hidden space-y-10 animate-fade-in">
+        <div id="analysis-section" class="hidden space-y-10">
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                    <span class="text-xs font-bold text-blue-400 uppercase tracking-wider block mb-1">Meas. (Top 3 Avg)</span>
-                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-m-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (3 ค่าน้อยสุดหาร 3)</p>
+                    <span class="text-xs font-bold text-blue-400 uppercase block mb-1">Meas. (Top 3 Avg)</span>
+                    <h3 class="text-3xl font-black text-white code-font" id="acc-m-top3">0%</h3>
+                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-                    <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-1">Meas. (Grand Avg)</span>
-                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-m-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (ค่าเฉลี่ยรวมทั้งชั้น)</p>
+                    <span class="text-xs font-bold text-indigo-400 uppercase block mb-1">Meas. (Grand Avg)</span>
+                    <h3 class="text-3xl font-black text-white code-font" id="acc-m-avg">0%</h3>
+                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
-                    <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-1">RSSI (Top 3 Avg)</span>
-                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-r-top3">0%</h3>
-                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (3 ค่าน้อยสุดหาร 3)</p>
+                    <span class="text-xs font-bold text-emerald-400 uppercase block mb-1">RSSI (Top 3 Avg)</span>
+                    <h3 class="text-3xl font-black text-white code-font" id="acc-r-top3">0%</h3>
+                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบ 3 ค่าน้อยสุดหาร 3</p>
                 </div>
-                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden group">
+                <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-xl border border-gray-800 shadow-lg relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
-                    <span class="text-xs font-bold text-teal-400 uppercase tracking-wider block mb-1">RSSI (Grand Avg)</span>
-                    <h3 class="text-3xl font-black tracking-tight text-white code-font" id="acc-r-avg">0%</h3>
-                    <p class="text-xs text-gray-400 mt-2">ความแม่นยำ (ค่าเฉลี่ยรวมทั้งชั้น)</p>
+                    <span class="text-xs font-bold text-teal-400 uppercase block mb-1">RSSI (Grand Avg)</span>
+                    <h3 class="text-3xl font-black text-white code-font" id="acc-r-avg">0%</h3>
+                    <p class="text-xs text-gray-400 mt-1">คำนวณแบบค่าเฉลี่ยรวมทั้งชั้น</p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-blue-500"></span> 🏆 อัตราความถูกต้องรวมในแต่ละโมเดล (%)
-                    </h3>
-                    <div class="h-72 relative">
-                        <canvas id="accuracyChart"></canvas>
-                    </div>
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">🏆 อัตราความถูกต้องรวมในแต่ละโมเดล (%)</h3>
+                    <div class="h-72 relative"><canvas id="accuracyChart"></canvas></div>
                 </div>
                 <div class="bg-[#111827]/70 backdrop-blur-md p-6 rounded-2xl border border-gray-800 shadow-xl">
-                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-red-500"></span> 📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นจริง (จุด)
-                    </h3>
-                    <div class="h-72 relative">
-                        <canvas id="errorFloorChart"></canvas>
-                    </div>
+                    <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">📍 ปริมาณความผิดพลาดคลาดเคลื่อนแยกตามชั้นจริง (จุด)</h3>
+                    <div class="h-72 relative"><canvas id="errorFloorChart"></canvas></div>
                 </div>
             </div>
 
             <div class="bg-[#111827]/70 backdrop-blur-md rounded-2xl border border-gray-800 shadow-xl overflow-hidden">
-                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="p-5 border-b border-gray-800 bg-gray-900/30 flex justify-between items-center">
                     <div>
-                        <h3 class="text-base font-bold text-white">📋 ตารางวิเคราะห์ประมวลผลข้อมูลตำแหน่งแบบ Real-time</h3>
-                        <p class="text-xs text-gray-400 mt-0.5">ผลลัพธ์การเปรียบเทียบจากตรรกะสมการ KNN ครบถ้วนทุก Particle</p>
+                        <h3 class="text-base font-bold text-white">📋 ตารางผลการคำนวณระดับชั้นจากสมการ KNN ในเบราว์เซอร์</h3>
                     </div>
-                    <div class="flex items-center gap-2 self-start sm:self-center">
-                        <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
-                    </div>
+                    <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/20 font-bold code-font" id="total-records">0 PARTICLES</span>
                 </div>
-                
                 <div class="overflow-x-auto max-h-[500px]">
                     <table class="w-full text-left border-collapse text-xs md:text-sm">
                         <thead>
-                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase tracking-wider font-bold text-xs sticky top-0 backdrop-blur-md border-b border-gray-800">
+                            <tr class="bg-[#1f2937]/50 text-gray-400 uppercase font-bold sticky top-0 border-b border-gray-800">
                                 <th class="p-4">Floor จริง</th>
                                 <th class="p-4">Particle ID</th>
-                                <th class="p-4 bg-blue-950/20 text-blue-400 border-x border-gray-800/50">Meas (Top 3)</th>
-                                <th class="p-4 bg-indigo-950/20 text-indigo-400 border-r border-gray-800/50">Meas (Avg รวม)</th>
-                                <th class="p-4 bg-emerald-950/20 text-emerald-400 border-r border-gray-800/50">RSSI (Top 3)</th>
+                                <th class="p-4 bg-blue-950/20 text-blue-400">Meas (Top 3)</th>
+                                <th class="p-4 bg-indigo-950/20 text-indigo-400">Meas (Avg รวม)</th>
+                                <th class="p-4 bg-emerald-950/20 text-emerald-400">RSSI (Top 3)</th>
                                 <th class="p-4 bg-teal-950/20 text-teal-400">RSSI (Avg รวม)</th>
                             </tr>
                         </thead>
-                        <tbody id="table-output" class="divide-y divide-gray-800/60 code-font">
-                            </tbody>
+                        <tbody id="table-output" class="divide-y divide-gray-800/60 code-font"></tbody>
                     </table>
                 </div>
             </div>
@@ -159,7 +141,7 @@
 
         function handleLiveFile(file) {
             engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 mt-1";
-            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-spin"></span> Processing Math...`;
+            engineStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400 animate-spin"></span> Processing Live Engine...`;
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -173,7 +155,7 @@
                     executeKnnEngine(rawRows);
                 } catch (err) {
                     engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 mt-1";
-                    engineStatus.innerHTML = `❌ Error Parsing File`;
+                    engineStatus.innerHTML = `❌ Error Parsing Data`;
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -185,7 +167,6 @@
         function executeKnnEngine(rawRows) {
             let cleanData = [];
             
-            // ลูปคัดกรองแถวข้อมูลอย่างแม่นยำ ป้องกันค่าว่างและแถวที่ไม่เกี่ยวข้องกัน
             for (let i = 0; i < rawRows.length; i++) {
                 let row = rawRows[i];
                 if (row && row[0] && String(row[0]).trim().startsWith('Floor')) {
@@ -194,13 +175,8 @@
                     
                     if (partStr.toLowerCase().startsWith('particle')) continue;
 
-                    let m1 = parseFloat(row[2]);
-                    let m2 = parseFloat(row[3]);
-                    let m3 = parseFloat(row[4]);
-                    
-                    let r1 = parseFloat(row[5]);
-                    let r2 = parseFloat(row[6]);
-                    let r3 = parseFloat(row[7]);
+                    let m1 = parseFloat(row[2]); let m2 = parseFloat(row[3]); let m3 = parseFloat(row[4]);
+                    let r1 = parseFloat(row[5]); let r2 = parseFloat(row[6]); let r3 = parseFloat(row[7]);
 
                     if (isNaN(m1) || isNaN(m2) || isNaN(m3)) continue;
 
@@ -214,8 +190,7 @@
             }
 
             if (cleanData.length === 0) {
-                engineStatus.className = "inline-flex items-center gap-2 text-xs font-medium bg-red-500/10 text-red-400 px-3 py-1 rounded-full border border-red-500/20 mt-1";
-                engineStatus.innerHTML = `❌ No Data Found`;
+                engineStatus.innerHTML = `❌ No valid data rows found`;
                 return;
             }
 
@@ -225,45 +200,36 @@
 
             document.getElementById('total-records').textContent = `${cleanData.length} PARTICLES`;
 
-            // วนลูปสมการคำนวณ KNN ในเบราว์เซอร์
             cleanData.forEach((mobile) => {
                 let actualFloor = mobile.actualFloor;
-                
                 let mDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
                 let rDistances = { 'Floor 1': [], 'Floor 2': [], 'Floor 3': [], 'Floor 4': [] };
 
                 cleanData.forEach((target) => {
                     let targetFloor = target.actualFloor;
 
-                    // สมการขั้นตอนที่ 1: Euclidean Distance Formula
-                    let distM = Math.sqrt(
-                        Math.pow(mobile.meas[0] - target.meas[0], 2) +
-                        Math.pow(mobile.meas[1] - target.meas[1], 2) +
-                        Math.pow(mobile.meas[2] - target.meas[2], 2)
-                    );
-
-                    let distR = Math.sqrt(
-                        Math.pow(mobile.rssi[0] - target.rssi[0], 2) +
-                        Math.pow(mobile.rssi[1] - target.rssi[1], 2) +
-                        Math.pow(mobile.rssi[2] - target.rssi[2], 2)
-                    );
+                    let distM = Math.sqrt(Math.pow(mobile.meas[0]-target.meas[0],2) + Math.pow(mobile.meas[1]-target.meas[1],2) + Math.pow(mobile.meas[2]-target.meas[2],2));
+                    let distR = Math.sqrt(Math.pow(mobile.rssi[0]-target.rssi[0],2) + Math.pow(mobile.rssi[1]-target.rssi[1],2) + Math.pow(mobile.rssi[2]-target.rssi[2],2));
 
                     mDistances[targetFloor].push(distM);
                     rDistances[targetFloor].push(distR);
                 });
 
-                // สมการขั้นตอนที่ 2 และ 3: คัดเลือกและประเมินผลค่าเฉลี่ย
                 function runPredictionLive(distanceMap, isTop3Mode) {
                     let finalFloorScores = {};
                     
                     for (let fl in distanceMap) {
                         let dList = distanceMap[fl];
                         if (isTop3Mode) {
-                            let filtered = dList.filter(v => v > 0).sort((a, b) => a - b);
-                            finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 9999);
+                            // ปรับเงื่อนไขให้ยืดหยุ่น: เรียงค่าน้อยสุด หากมีระยะห่าง 0 (ตัวมันเอง) ให้ข้ามไปเอาอันดับถัดไปเพื่อเฉลี่ย 3 ตัว
+                            let sorted = dList.slice().sort((a, b) => a - b);
+                            let filtered = sorted.filter(v => v > 0);
+                            if (filtered.length < 3) filtered = sorted; // Fallback ป้องกันอาคารสลับชั้นค้าง
+                            
+                            finalFloorScores[fl] = filtered.length >= 3 ? (filtered[0] + filtered[1] + filtered[2]) / 3 : (filtered[0] || 999);
                         } else {
                             let totalSum = dList.reduce((a, b) => a + b, 0);
-                            finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 9999;
+                            finalFloorScores[fl] = dList.length > 0 ? (totalSum / dList.length) : 999;
                         }
                     }
 
@@ -294,30 +260,28 @@
                 });
             });
 
-            // อัปเดต % ค่าสถิติการ์ด
             const pct = (v, t) => ((v / t) * 100).toFixed(2) + "%";
             document.getElementById('acc-m-top3').textContent = pct(counts.mTop3, counts.total);
             document.getElementById('acc-m-avg').textContent = pct(counts.mAvg, counts.total);
             document.getElementById('acc-r-top3').textContent = pct(counts.rTop3, counts.total);
             document.getElementById('acc-r-avg').textContent = pct(counts.rAvg, counts.total);
 
-            // สร้างแถวตารางแบบสไตล์มืออาชีพ
             const tbody = document.getElementById('table-output');
             tbody.innerHTML = "";
             logs.forEach(log => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-800/30 transition-colors";
+                tr.className = "hover:bg-gray-800/40 transition-colors border-b border-gray-800/50 text-xs sm:text-sm";
                 
                 const badgeStyle = (val) => val === 'ถูก' 
-                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-md font-bold' 
-                    : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-md font-semibold';
+                    ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md font-bold' 
+                    : 'text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-md font-semibold';
 
                 tr.innerHTML = `
                     <td class="p-4 text-white font-medium">${log.floor}</td>
                     <td class="p-4 text-gray-400">${log.id}</td>
-                    <td class="p-4 bg-blue-950/5 border-x border-gray-800/30"><span class="${badgeStyle(log.mTop3)}">${log.mTop3}</span></td>
-                    <td class="p-4 bg-indigo-950/5 border-r border-gray-800/30"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
-                    <td class="p-4 bg-emerald-950/5 border-r border-gray-800/30"><span class="${badgeStyle(log.rTop3)}">${log.rTop3}</span></td>
+                    <td class="p-4 bg-blue-950/5"><span class="${badgeStyle(log.mTop3)}">${log.mTop3}</span></td>
+                    <td class="p-4 bg-indigo-950/5"><span class="${badgeStyle(log.mAvg)}">${log.mAvg}</span></td>
+                    <td class="p-4 bg-emerald-950/5"><span class="${badgeStyle(log.rTop3)}">${log.rTop3}</span></td>
                     <td class="p-4 bg-teal-950/5"><span class="${badgeStyle(log.rAvg)}">${log.rAvg}</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -337,13 +301,11 @@
             if(accChart) accChart.destroy();
             if(errChart) errChart.destroy();
 
-            // ใช้ชุดสีแบบ Cyberpunk Dashboard
             accChart = new Chart(ctx1, {
                 type: 'bar',
                 data: {
-                    labels: ['Meas (Top 3)', 'Meas (Avg รวม)', 'RSSI (Top 3)', 'RSSI (Avg รวม)'],
+                    labels: ['Meas (Top 3)', 'Meas (Avg)', 'RSSI (Top 3)', 'RSSI (Avg)'],
                     datasets: [{
-                        label: 'ความถูกต้องแม่นยำ (%)',
                         data: [
                             ((counts.mTop3 / counts.total) * 100),
                             ((counts.mAvg / counts.total) * 100),
@@ -351,7 +313,7 @@
                             ((counts.rAvg / counts.total) * 100)
                         ],
                         backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#14b8a6'],
-                        borderRadius: 6
+                        borderRadius: 5
                     }]
                 },
                 options: {
@@ -370,10 +332,9 @@
                 data: {
                     labels: Object.keys(errors),
                     datasets: [{
-                        label: 'จำนวนจุดคลาดเคลื่อน (จุด)',
                         data: Object.values(errors),
                         backgroundColor: ['#ef4444', '#f97316', '#f59e0b', '#84cc16'],
-                        borderRadius: 6
+                        borderRadius: 5
                     }]
                 },
                 options: {
