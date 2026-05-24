@@ -158,6 +158,10 @@ tbody tr:hover{background:rgba(255,255,255,0.025);}
 
 @media(max-width:1000px){.metric-grid{grid-template-columns:repeat(3,1fr);}.charts-grid,.map-grid,.dev-grid{grid-template-columns:1fr;}.pso-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:600px){.metric-grid{grid-template-columns:repeat(2,1fr);}.pso-grid,.pso-result-grid{grid-template-columns:1fr;}}
+.anim-grid{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start;}
+@media(max-width:900px){.anim-grid{grid-template-columns:1fr;}}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+select option{background:#111827;color:#f0f2f7;}
 </style>
 </head>
 <body>
@@ -176,6 +180,7 @@ tbody tr:hover{background:rgba(255,255,255,0.025);}
   <nav><div class="nav-tabs">
     <button class="nav-tab active" data-tab="overview">📊 ภาพรวม</button>
     <button class="nav-tab" data-tab="pso">🔬 PSO Engine</button>
+    <button class="nav-tab" data-tab="animator">🎬 PSO Animator</button>
     <button class="nav-tab" data-tab="deviation">📍 คลาดเคลื่อน</button>
     <button class="nav-tab" data-tab="compare">📈 กราฟเปรียบเทียบ</button>
     <button class="nav-tab" data-tab="floormap">🗺️ แผนผังชั้น</button>
@@ -185,16 +190,15 @@ tbody tr:hover{background:rgba(255,255,255,0.025);}
 
 <main class="main">
 
-  <!-- UPLOAD -->
-  <div id="drop-zone" class="drop-zone">
-    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
-    <div class="drop-icon">📂</div>
-    <div class="drop-title">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่</div>
-    <div class="drop-sub">รองรับ <strong>.xlsx / .xls / .csv</strong> — ข้อมูลสัญญาณ Measurement &amp; RSSI Predict</div>
-  </div>
-
   <!-- ═══ TAB: OVERVIEW ═══ -->
   <div id="tab-overview" class="tab-panel active">
+    <!-- UPLOAD — อยู่ใน tab overview เท่านั้น -->
+    <div id="drop-zone" class="drop-zone">
+      <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none">
+      <div class="drop-icon">📂</div>
+      <div class="drop-title">ลากและหย่อนไฟล์ข้อมูลดิบที่นี่</div>
+      <div class="drop-sub">รองรับ <strong>.xlsx / .xls / .csv</strong> — ข้อมูลสัญญาณ Measurement &amp; RSSI Predict</div>
+    </div>
     <div id="ov-empty" class="empty-state"><div style="font-size:48px">📁</div><p>อัพโหลดไฟล์เพื่อเริ่มคำนวณ</p></div>
     <div id="ov-content" class="hidden">
       <div class="sec-title">อัตราความถูกต้อง 4 วิธีคำนวณ (KNN)</div>
@@ -388,6 +392,117 @@ tbody tr:hover{background:rgba(255,255,255,0.025);}
     </div>
   </div>
 
+  <!-- ═══ TAB: PSO ANIMATOR ═══ -->
+  <div id="tab-animator" class="tab-panel">
+    <div class="anim-grid">
+
+      <!-- LEFT: Controls -->
+      <div>
+        <!-- Mobile Selector -->
+        <div class="chart-card" style="margin-bottom:14px;">
+          <div class="chart-title" style="margin-bottom:10px;">เลือก Mobile (PR ที่ใช้ทดสอบ)</div>
+          <select id="anim-mobile-select" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-family:var(--mono);font-size:12px;padding:7px 10px;margin-bottom:10px;">
+            <option value="">-- เลือก PR ที่ต้องการดู --</option>
+          </select>
+          <div id="anim-mobile-info" style="font-size:11px;color:var(--muted);line-height:1.8;display:none;background:var(--bg4);border-radius:var(--rs);padding:8px 10px;"></div>
+        </div>
+
+        <!-- RSSI Mode -->
+        <div class="chart-card" style="margin-bottom:14px;">
+          <div class="chart-title" style="margin-bottom:8px;">โหมด RSSI</div>
+          <div style="display:flex;gap:8px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;">
+              <input type="radio" name="anim-rssi-mode" value="meas" checked style="accent-color:var(--purple)"> Measurement
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;">
+              <input type="radio" name="anim-rssi-mode" value="pred" style="accent-color:var(--green)"> RSSI Predict
+            </label>
+          </div>
+        </div>
+
+        <!-- PSO Params for animation -->
+        <div class="chart-card" style="margin-bottom:14px;">
+          <div class="chart-title" style="margin-bottom:10px;">PSO Parameters (Animation)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div class="pso-field"><label>n particles</label><input type="number" id="anim-n" value="30" min="5" max="100"></div>
+            <div class="pso-field"><label>k iterations</label><input type="number" id="anim-k" value="20" min="3" max="100"></div>
+            <div class="pso-field"><label>Speed (ms/frame)</label><input type="number" id="anim-speed" value="300" min="50" max="2000" step="50"></div>
+            <div class="pso-field"><label>η (auto/manual)</label><input type="number" id="anim-eta" value="2.2" step="0.1" min="1.0" max="6.0"></div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <button id="anim-btn-init" class="btn btn-pso" style="flex:1;" disabled>⚡ เตรียม PSO</button>
+          <button id="anim-btn-play" class="btn" style="flex:1;background:var(--green-dim);color:var(--green);border-color:var(--green-b);" disabled>▶ เล่น</button>
+          <button id="anim-btn-pause" class="btn" style="flex:1;background:var(--amber-dim);color:var(--amber);border-color:var(--amber-b);" disabled>⏸ หยุด</button>
+          <button id="anim-btn-reset" class="btn" style="flex:1;background:var(--err-dim);color:var(--err);border-color:var(--err-b);" disabled>↺ Reset</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button id="anim-btn-prev" class="btn" style="flex:1;background:var(--bg3);color:var(--muted);border-color:var(--border2);" disabled>◀ ก่อนหน้า</button>
+          <button id="anim-btn-next" class="btn" style="flex:1;background:var(--bg3);color:var(--muted);border-color:var(--border2);" disabled>▶ ถัดไป</button>
+        </div>
+
+        <!-- Iteration info -->
+        <div class="chart-card" style="margin-bottom:14px;">
+          <div class="chart-title">สถานะ Iteration</div>
+          <div id="anim-iter-display" style="font-family:var(--mono);font-size:12px;line-height:2;margin-top:6px;">
+            <div>รอบที่: <span id="anim-iter-num" style="color:var(--blue)">—</span> / <span id="anim-iter-total">—</span></div>
+            <div>gbest cost: <span id="anim-gbest-cost" style="color:var(--green)">—</span></div>
+            <div>gbest X,Y: <span id="anim-gbest-xy" style="color:var(--purple)">—</span></div>
+            <div>error ถึงจริง: <span id="anim-gbest-err" style="color:var(--amber)">—</span> m</div>
+          </div>
+        </div>
+
+        <!-- Per-iteration table -->
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:8px;">บันทึกทุก Iteration</div>
+          <div style="max-height:240px;overflow-y:auto;">
+            <table style="width:100%;font-size:11px;border-collapse:collapse;">
+              <thead><tr style="background:var(--bg4);">
+                <th style="padding:5px 8px;color:var(--muted);text-align:left;">k</th>
+                <th style="padding:5px 8px;color:var(--blue);text-align:left;">gbest X</th>
+                <th style="padding:5px 8px;color:var(--blue);text-align:left;">gbest Y</th>
+                <th style="padding:5px 8px;color:var(--green);text-align:left;">cost</th>
+                <th style="padding:5px 8px;color:var(--amber);text-align:left;">err(m)</th>
+              </tr></thead>
+              <tbody id="anim-iter-log" style="font-family:var(--mono);"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Canvas + chart -->
+      <div>
+        <!-- Floor map canvas -->
+        <div class="chart-card" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div>
+              <div class="chart-title">แผนที่การเคลื่อนที่ Particle</div>
+              <div class="chart-sub" id="anim-floor-label">เลือก Mobile เพื่อเริ่ม</div>
+            </div>
+            <div style="display:flex;gap:12px;font-size:11px;flex-wrap:wrap;">
+              <span style="color:var(--muted)">● Particle</span>
+              <span style="color:#facc15">★ gbest</span>
+              <span style="color:#22c55e">✦ Mobile จริง</span>
+              <span style="color:var(--purple)">▲ AN Node</span>
+              <span style="color:#60a5fa">○ PR อื่น</span>
+            </div>
+          </div>
+          <div style="position:relative;width:100%;height:0;padding-top:75%;background:var(--bg3);border-radius:var(--rs);overflow:hidden;">
+            <canvas id="anim-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
+          </div>
+        </div>
+
+        <!-- Convergence chart -->
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:10px;">กราฟ Fitness ลู่เข้า (Convergence)</div>
+          <div style="height:180px;position:relative;"><canvas id="anim-conv-chart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <script>
@@ -480,6 +595,11 @@ document.querySelectorAll('.nav-tab').forEach(function(btn){
     document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
     document.getElementById('tab-'+id).classList.add('active');
     if(id==='floormap') renderMaps();
+    // reset canvas size cache เมื่อเปิด animator tab
+    if(id==='animator'){
+      var el = document.getElementById('anim-canvas');
+      if(el) el.dataset.w = '';
+    }
   });
 });
 
@@ -572,6 +692,9 @@ function renderKNNAll(){
     document.getElementById(k+'-empty').classList.add('hidden');
     document.getElementById(k+'-content').classList.remove('hidden');
   });
+  // ซ่อน drop zone หลังโหลดไฟล์สำเร็จ
+  var dz2 = document.getElementById('drop-zone');
+  if(dz2) dz2.style.display='none';
   renderMaps();
 }
 
@@ -744,204 +867,162 @@ function psoRunHybrid(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2,
   };
 }
 
-function psoRunOneFloor(mobileRSSI, mobile, fl, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
-  var scatterX=36, scatterY=27;
-  var pz = FLOOR_Z[fl] || 0;
-  var nFloors = floorsThrough(mobile.id, fl);
-  var faf = nFloors * FAF_PER_FLOOR;
-  var isLos = OPEN_ATRIUM_IDS.has(mobile.id);
-  var etaLo = isLos ? Math.max(1.5, etaLos-0.3) : Math.max(2.0, etaNlos-0.5);
-  var etaHi = isLos ? etaLos+0.3 : etaNlos+0.5;
-
-  var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
-  var particles = [];
-
-  // Seed: PR ชั้นนั้น ± jitter เล็กน้อย
-  flPRs.forEach(function(s){
-    particles.push({
-      x:s.x+rand(-2,2), y:s.y+rand(-2,2), z:pz,
-      eta:rand(etaLo,etaHi), vx:0, vy:0, bx:s.x, by:s.y, bc:Infinity
-    });
-  });
-  // เติม random จนครบ n
-  while(particles.length < n){
-    particles.push({
-      x:rand(0,scatterX), y:rand(0,scatterY), z:pz,
-      eta:rand(etaLo,etaHi), vx:0, vy:0,
-      bx:rand(0,scatterX), by:rand(0,scatterY), bc:Infinity
-    });
-  }
-
-  particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf); p.bx=p.x; p.by=p.y;});
-  var gbest = getBest(particles);
-  var iterFitness = [];
-
-  for(var k=1; k<=K; k++){
-    var w = wmax - k*(wmax-wmin)/K;
-    particles.forEach(function(p){
-      var r1=Math.random(), r2=Math.random();
-      p.vx = w*p.vx + c1*r1*(p.bx-p.x) + c2*r2*(gbest.x-p.x);
-      p.vy = w*p.vy + c1*r1*(p.by-p.y) + c2*r2*(gbest.y-p.y);
-      p.vx = Math.max(-3, Math.min(3, p.vx));
-      p.vy = Math.max(-3, Math.min(3, p.vy));
-      p.x = Math.max(0, Math.min(scatterX, p.x+p.vx));
-      p.y = Math.max(0, Math.min(scatterY, p.y+p.vy));
-      var cost = fitness(p, mobileRSSI, faf);
-      if(cost < p.bc){ p.bc=cost; p.bx=p.x; p.by=p.y; }
-      if(cost < gbest.bc){ gbest={x:p.x,y:p.y,bc:cost}; }
-    });
-    iterFitness.push(gbest.bc);
-  }
-  return { gx:gbest.x, gy:gbest.y, gcost:gbest.bc, iterFitness:iterFitness };
-}
-
 // ── FLOOR / ENVIRONMENT CONFIG ──
-var FLOOR_Z = {'Floor 4':0, 'Floor 3':3.0, 'Floor 2':6.0, 'Floor 1':9.0};
-var FAF_PER_FLOOR = 15.0;
+// AN ติด ceiling ชั้น 4 สูง 1.5m จากพื้น F4
+// F4 พื้นอยู่สูง 9m จาก F1, ดังนั้น AN อยู่สูง 10.5m จาก F1
+// z = ระยะ vertical จาก AN ลงถึง PR (ใช้ใน d 3D)
+var AN_HEIGHT    = 10.5; // m จากพื้น F1
+var FLOOR_HEIGHT = {'Floor 4':9.0,'Floor 3':6.0,'Floor 2':3.0,'Floor 1':0.0};
+function getZ(fl){ return AN_HEIGHT - (FLOOR_HEIGHT[fl]||0); }
+// F4→z=1.5m, F3→z=4.5m, F2→z=7.5m, F1→z=10.5m
 
-// PLd0 calibrated จากการวัดจริงที่ d0=1m → -53 dBm (fixed, ไม่สุ่ม)
+var FAF_PER_FLOOR   = 12.0; // dBm/ชั้น คอนกรีต LoRa 433MHz
 var PLd0_CALIBRATED = -53.0;
-
-// PR ที่อยู่ในโถงเปิด LoS ตรงจาก AN ชั้น 4
 var OPEN_ATRIUM_IDS = new Set(['PR40','PR41','PR42','PR43','PR44','PR45','PR46','PR47','PR55']);
 
 function floorsThrough(prId, targetFloor){
   if(OPEN_ATRIUM_IDS.has(prId)) return 0;
   var fn = parseInt(targetFloor.replace('Floor ',''));
-  return Math.max(0, 4 - fn);
+  return Math.max(0, 4-fn);
 }
 
 function dist3D(px, py, pz, ax, ay){
-  return Math.max(Math.sqrt((px-ax)**2+(py-ay)**2+pz**2), 0.01);
+  return Math.max(Math.sqrt((px-ax)**2+(py-ay)**2+pz**2), 0.1);
 }
 
 function fitness(p, mobileRSSI, faf){
-  var pz = p.z || 0;
-  var total = 0;
-  ANCHORS.forEach(function(an, i){
-    var d = dist3D(p.x, p.y, pz, an.x, an.y);
-    // PLd0 fixed = -43, eta ยังให้ PSO ปรับได้ในช่วง narrow
-    var predicted = PLd0_CALIBRATED - 10*p.eta*Math.log10(d/1.0) - (faf||0);
-    if(predicted > -90) predicted = -110;
-    total += Math.sqrt((predicted - mobileRSSI[i])**2);
+  var pz=p.z||0, fafT=faf||0, total=0;
+  ANCHORS.forEach(function(an,i){
+    var d = dist3D(p.x,p.y,pz,an.x,an.y);
+    var predicted = PLd0_CALIBRATED - 10*p.eta*Math.log10(d) - fafT;
+    predicted = Math.max(-120, Math.min(-20, predicted));
+    total += (predicted - mobileRSSI[i])**2;
   });
-  return total;
+  return Math.sqrt(total/ANCHORS.length);
 }
 
-// Backsolve eta จาก PR ชั้น 4 ทั้งหมด (รู้พิกัดและอยู่ชั้นเดียวกับ AN)
-// RSSI = PLd0 - 10η·log10(d) → η = (PLd0 - RSSI) / (10·log10(d))
 function backsolveEta(){
   var f4prs = PR_DB.filter(function(p){return p.floor==='Floor 4';});
-  var etaVals = [];
+  var pz4   = getZ('Floor 4'); // 1.5m
+  var losVals=[], nlosVals=[];
   f4prs.forEach(function(pr){
-    ANCHORS.forEach(function(an, i){
-      var d = dist3D(pr.x, pr.y, 0, an.x, an.y); // z=0 ชั้น 4
-      if(d < 0.5) return; // ใกล้เกินไป
-      // ใช้ mRSSI (วัดจริง)
-      var rssi = pr.mRSSI[i];
-      if(rssi <= -100) return; // no signal
-      var eta = (PLd0_CALIBRATED - rssi) / (10 * Math.log10(d));
-      if(eta > 1.0 && eta < 6.0) etaVals.push(eta);
+    ANCHORS.forEach(function(an,i){
+      var d=dist3D(pr.x,pr.y,pz4,an.x,an.y);
+      var rssi=pr.mRSSI[i];
+      if(rssi<=-110||d<0.3) return;
+      var eta=(PLd0_CALIBRATED-rssi)/(10*Math.log10(d));
+      if(eta<1.0||eta>6.0) return;
+      if(OPEN_ATRIUM_IDS.has(pr.id)) losVals.push(eta);
+      else nlosVals.push(eta);
     });
   });
-  if(!etaVals.length) return {los:2.2, nlos:3.8};
-  etaVals.sort(function(a,b){return a-b;});
-  // LoS eta = ค่าน้อยๆ (lower quartile), NLoS = ค่ามากๆ (upper quartile)
-  var q1 = etaVals[Math.floor(etaVals.length*0.25)];
-  var q3 = etaVals[Math.floor(etaVals.length*0.75)];
-  var med = etaVals[Math.floor(etaVals.length*0.5)];
-  return {los: +Math.max(1.5, q1).toFixed(2), nlos: +Math.min(5.5, q3).toFixed(2), med: +med.toFixed(2)};
-}
-
-function psoRunOnce(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
-  var scatterX=36, scatterY=27;
-  var bestFloor=null, bestGbest=null, bestCost=Infinity;
-  var bestIterFitness=[];
-
-  FLOORS.forEach(function(fl){
-    var pz = FLOOR_Z[fl] || 0;
-    var nFloors = floorsThrough(mobile.id, fl);
-    var faf = nFloors * FAF_PER_FLOOR;
-    var isLos = OPEN_ATRIUM_IDS.has(mobile.id) && fl==='Floor 1';
-    // eta range: LoS ช่วงแคบรอบค่า calibrated, NLoS ช่วงกว้างขึ้น
-    var etaLo = isLos ? Math.max(1.5, etaLos-0.3) : Math.max(2.0, etaNlos-0.5);
-    var etaHi = isLos ? etaLos+0.3 : etaNlos+0.5;
-
-    var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
-    var particles = [];
-    // Seed: PR ของชั้นนั้น (ตำแหน่งรู้จริง)
-    flPRs.forEach(function(s){
-      particles.push({
-        x:s.x+rand(-2,2), y:s.y+rand(-2,2), z:pz,
-        eta:rand(etaLo, etaHi),
-        vx:0, vy:0, bx:s.x, by:s.y, bc:Infinity
-      });
-    });
-    // เติมสุ่มจนครบ n
-    while(particles.length < n){
-      particles.push({
-        x:rand(0,scatterX), y:rand(0,scatterY), z:pz,
-        eta:rand(etaLo, etaHi),
-        vx:0, vy:0, bx:rand(0,scatterX), by:rand(0,scatterY), bc:Infinity
-      });
-    }
-
-    particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf); p.bx=p.x; p.by=p.y;});
-    var gbest = getBest(particles);
-    var iterFitness = [];
-
-    for(var k=1; k<=K; k++){
-      var w = wmax - k*(wmax-wmin)/K;
-      particles.forEach(function(p){
-        var r1=Math.random(), r2=Math.random();
-        p.vx = w*p.vx + c1*r1*(p.bx-p.x) + c2*r2*(gbest.x-p.x);
-        p.vy = w*p.vy + c1*r1*(p.by-p.y) + c2*r2*(gbest.y-p.y);
-        p.x = Math.max(0, Math.min(scatterX, p.x+p.vx));
-        p.y = Math.max(0, Math.min(scatterY, p.y+p.vy));
-        // velocity clamp
-        p.vx = Math.max(-3, Math.min(3, p.vx));
-        p.vy = Math.max(-3, Math.min(3, p.vy));
-        var cost = fitness(p, mobileRSSI, faf);
-        if(cost < p.bc){ p.bc=cost; p.bx=p.x; p.by=p.y; }
-        if(cost < gbest.bc){ gbest={x:p.x,y:p.y,bc:cost}; }
-      });
-      iterFitness.push(gbest.bc);
-    }
-
-    if(gbest.bc < bestCost){
-      bestCost=gbest.bc; bestFloor=fl;
-      bestGbest=gbest; bestIterFitness=iterFitness;
-    }
-  });
-
-  return{
-    gx:bestGbest.x, gy:bestGbest.y,
-    gcost:bestCost, predFloor:bestFloor,
-    iterFitness:bestIterFitness
-  };
-}
-
-// Multi-run: รัน R ครั้ง แล้วเฉลี่ย gbest XY เพื่อลด variance
-function psoRun(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
-  var runs = [];
-  for(var r=0; r<R; r++){
-    runs.push(psoRunOnce(mobileRSSI, mobile, n, K, wmin, wmax, c1, c2, etaLos, etaNlos));
+  function median(arr){
+    if(!arr.length) return null;
+    var s=arr.slice().sort(function(a,b){return a-b;});
+    return s[Math.floor(s.length/2)];
   }
-  // เลือก floor จาก majority vote
-  var floorVotes = {};
-  runs.forEach(function(r){ floorVotes[r.predFloor]=(floorVotes[r.predFloor]||0)+1; });
-  var bestFloor = Object.keys(floorVotes).reduce(function(a,b){ return floorVotes[a]>floorVotes[b]?a:b; });
-  // เฉลี่ย XY เฉพาะ run ที่ทำนายชั้นถูก
-  var winners = runs.filter(function(r){ return r.predFloor===bestFloor; });
-  if(!winners.length) winners=runs;
-  var avgX = winners.reduce(function(s,r){return s+r.gx;},0)/winners.length;
-  var avgY = winners.reduce(function(s,r){return s+r.gy;},0)/winners.length;
-  var bestRun = runs.reduce(function(a,b){ return a.gcost<b.gcost?a:b; });
+  var losEta  = +Math.max(1.8,Math.min(3.5, median(losVals)||2.2)).toFixed(2);
+  var nlosEta = +Math.max(3.0,Math.min(5.5, median(nlosVals)||3.8)).toFixed(2);
+  return {los:losEta, nlos:nlosEta,
+    detail:'LoS('+losVals.length+')='+losEta+' NLoS('+nlosVals.length+')='+nlosEta};
+}
+
+function knnPredictFloor(mobileRSSI, mobileId){
+  var flDist={};
+  FLOORS.forEach(function(fl){flDist[fl]=[];});
+  PR_DB.forEach(function(pr){
+    if(pr.id===mobileId) return;
+    var d=Math.sqrt(
+      (mobileRSSI[0]-pr.pRSSI[0])**2+
+      (mobileRSSI[1]-pr.pRSSI[1])**2+
+      (mobileRSSI[2]-pr.pRSSI[2])**2
+    );
+    if(flDist[pr.floor]) flDist[pr.floor].push(d);
+  });
+  var scores={};
+  FLOORS.forEach(function(fl){
+    var s=flDist[fl].slice().sort(function(a,b){return a-b;});
+    var top=s.filter(function(v){return v>0;}).slice(0,3);
+    scores[fl]=top.length?top.reduce(function(a,b){return a+b;},0)/top.length:999;
+  });
+  return FLOORS.reduce(function(a,b){return scores[a]<scores[b]?a:b;});
+}
+
+function euclid3RSSI(a,b){
+  return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
+}
+
+// PSO + Local grid search refinement
+function psoRunHybrid(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
+  var runs=[];
+  for(var r=0;r<R;r++){
+    runs.push(psoRunOneFloor(mobileRSSI,mobile,targetFloor,n,K,wmin,wmax,c1,c2,etaLos,etaNlos));
+  }
+  var avgX=runs.reduce(function(s,r){return s+r.gx;},0)/runs.length;
+  var avgY=runs.reduce(function(s,r){return s+r.gy;},0)/runs.length;
+  var best=runs.reduce(function(a,b){return a.gcost<b.gcost?a:b;});
+  // Local grid refinement ±2m step 0.2m
+  var pz=getZ(targetFloor);
+  var nF=floorsThrough(mobile.id,targetFloor);
+  var faf=nF*FAF_PER_FLOOR;
+  var etaMid=OPEN_ATRIUM_IDS.has(mobile.id)?etaLos:etaNlos;
+  var bestL={x:avgX,y:avgY,c:best.gcost};
+  for(var dx=-2;dx<=2;dx+=0.2){
+    for(var dy=-2;dy<=2;dy+=0.2){
+      var tx=Math.max(0,Math.min(36,avgX+dx));
+      var ty=Math.max(0,Math.min(27,avgY+dy));
+      var p={x:tx,y:ty,z:pz,eta:etaMid};
+      var c=fitness(p,mobileRSSI,faf);
+      if(c<bestL.c) bestL={x:tx,y:ty,c:c};
+    }
+  }
   return{
-    gx:+(avgX.toFixed(2)), gy:+(avgY.toFixed(2)),
-    gcost:+(bestRun.gcost.toFixed(3)), predFloor:bestFloor,
-    iterFitness:bestRun.iterFitness
+    gx:+(bestL.x.toFixed(2)),gy:+(bestL.y.toFixed(2)),
+    gcost:+(bestL.c.toFixed(3)),predFloor:targetFloor,
+    iterFitness:best.iterFitness
   };
+}
+
+function psoRunOneFloor(mobileRSSI, mobile, fl, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
+  var scatterX=36, scatterY=27;
+  var pz=getZ(fl);
+  var nF=floorsThrough(mobile.id,fl);
+  var faf=nF*FAF_PER_FLOOR;
+  var isLos=OPEN_ATRIUM_IDS.has(mobile.id);
+  var etaMid=isLos?etaLos:etaNlos;
+  var etaLo=Math.max(1.0,etaMid-0.5);
+  var etaHi=Math.min(6.0,etaMid+0.5);
+  var flPRs=PR_DB.filter(function(p){return p.floor===fl;});
+  var particles=[];
+  flPRs.forEach(function(s){
+    particles.push({x:s.x+rand(-1.5,1.5),y:s.y+rand(-1.5,1.5),z:pz,
+      eta:rand(etaLo,etaHi),vx:0,vy:0,bx:s.x,by:s.y,bc:Infinity});
+  });
+  while(particles.length<n){
+    particles.push({x:rand(0,scatterX),y:rand(0,scatterY),z:pz,
+      eta:rand(etaLo,etaHi),vx:0,vy:0,
+      bx:rand(0,scatterX),by:rand(0,scatterY),bc:Infinity});
+  }
+  particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf);p.bx=p.x;p.by=p.y;});
+  var gbest=getBest(particles);
+  var iterFitness=[];
+  for(var k=1;k<=K;k++){
+    var w=wmax-k*(wmax-wmin)/K;
+    particles.forEach(function(p){
+      var r1=Math.random(),r2=Math.random();
+      p.vx=w*p.vx+c1*r1*(p.bx-p.x)+c2*r2*(gbest.x-p.x);
+      p.vy=w*p.vy+c1*r1*(p.by-p.y)+c2*r2*(gbest.y-p.y);
+      p.vx=Math.max(-4,Math.min(4,p.vx));
+      p.vy=Math.max(-4,Math.min(4,p.vy));
+      p.x=Math.max(0,Math.min(scatterX,p.x+p.vx));
+      p.y=Math.max(0,Math.min(scatterY,p.y+p.vy));
+      var cost=fitness(p,mobileRSSI,faf);
+      if(cost<p.bc){p.bc=cost;p.bx=p.x;p.by=p.y;}
+      if(cost<gbest.bc){gbest={x:p.x,y:p.y,bc:cost};}
+    });
+    iterFitness.push(gbest.bc);
+  }
+  return{gx:gbest.x,gy:gbest.y,gcost:gbest.bc,iterFitness:iterFitness};
 }
 
 function getBest(particles){
@@ -949,8 +1030,8 @@ function getBest(particles){
     return p.bc<b.bc?{x:p.x,y:p.y,z:p.z||0,bc:p.bc}:b;
   },{x:0,y:0,z:0,bc:Infinity});
 }
-
 function rand(a,b){return a+Math.random()*(b-a);}
+
 
 // ── BACKSOLVE η ──
 document.getElementById('btn-backsolve').addEventListener('click', function(){
@@ -996,7 +1077,8 @@ document.getElementById('btn-auto-tune').addEventListener('click',function(){
     candidates.forEach(function(c){
       var totalErr=0;
       sample.forEach(function(mob){
-        var r = psoRun(mob.pRSSI, mob, n, K, c.wmin, c.wmax, c.c1, c.c2, R, etaL, etaN);
+        var knnFloor = knnPredictFloor(mob.pRSSI, mob.id);
+        var r = psoRunHybrid(mob.pRSSI, mob, knnFloor, n, K, c.wmin, c.wmax, c.c1, c.c2, R, etaL, etaN);
         totalErr += Math.sqrt((r.gx-mob.x)**2+(r.gy-mob.y)**2);
       });
       var avgE = totalErr/sample.length;
@@ -1256,6 +1338,429 @@ document.getElementById('btn-export-pso').addEventListener('click',function(){
 
 // Init map on page load
 setTimeout(renderMaps,200);
+
+// ══════════════════════════════════════════════
+// PSO ANIMATOR ENGINE
+// ══════════════════════════════════════════════
+(function(){
+  var animState = {
+    mobile: null, rssiMode: 'meas',
+    particles: [], gbest: null,
+    history: [],   // [{particles snapshot, gbest, cost, err}]
+    currentK: 0, totalK: 0,
+    timer: null, running: false,
+    convChart: null
+  };
+
+  // Populate mobile selector
+  var sel = document.getElementById('anim-mobile-select');
+  PR_DB.forEach(function(pr){
+    var opt = document.createElement('option');
+    opt.value = pr.id;
+    opt.textContent = pr.id + ' — ' + pr.floor + ' (X'+pr.x+', Y'+pr.y+')';
+    sel.appendChild(opt);
+  });
+
+  sel.addEventListener('change', function(){
+    resetAnim();
+    var pr = PR_DB.find(function(p){return p.id===sel.value;});
+    if(!pr) return;
+    animState.mobile = pr;
+    var isLos = OPEN_ATRIUM_IDS.has(pr.id);
+    document.getElementById('anim-mobile-info').style.display='block';
+    document.getElementById('anim-mobile-info').innerHTML =
+      '<b style="color:var(--purple)">'+pr.id+'</b> · '+pr.floor+
+      '<br>📍 X='+pr.x+' m, Y='+pr.y+' m'+
+      '<br>📡 AN1: '+pr.mRSSI[0]+' dBm · AN2: '+pr.mRSSI[1]+' dBm · AN3: '+pr.mRSSI[2]+' dBm'+
+      '<br>🏗️ Zone: '+(isLos?'<span style="color:#f59e0b">โถงเปิด (LoS)</span>':'<span style="color:#3b82f6">ห้องเรียน (NLoS)</span>');
+    document.getElementById('anim-floor-label').textContent = 'ชั้น: '+pr.floor+' | '+pr.id;
+    document.getElementById('anim-btn-init').disabled = false;
+  });
+
+  document.querySelectorAll('input[name="anim-rssi-mode"]').forEach(function(r){
+    r.addEventListener('change',function(){ animState.rssiMode=r.value; resetAnim(); });
+  });
+
+  document.getElementById('anim-btn-init').addEventListener('click', initAnim);
+  document.getElementById('anim-btn-play').addEventListener('click', playAnim);
+  document.getElementById('anim-btn-pause').addEventListener('click', pauseAnim);
+  document.getElementById('anim-btn-reset').addEventListener('click', resetAnim);
+  document.getElementById('anim-btn-prev').addEventListener('click', function(){ stepAnim(-1); });
+  document.getElementById('anim-btn-next').addEventListener('click', function(){ stepAnim(1); });
+
+  function getMobileRSSI(){
+    var pr = animState.mobile;
+    return animState.rssiMode==='meas' ? pr.mRSSI : pr.pRSSI;
+  }
+
+  function initAnim(){
+    if(!animState.mobile) return;
+    resetAnim();
+    var mobile  = animState.mobile;
+    var mRSSI   = getMobileRSSI();
+    var n       = parseInt(document.getElementById('anim-n').value)||30;
+    var K       = parseInt(document.getElementById('anim-k').value)||20;
+    var etaInput= parseFloat(document.getElementById('anim-eta').value)||2.2;
+    var fl      = knnPredictFloor(mRSSI, mobile.id);
+    var pz      = getZ(fl);
+    var nF      = floorsThrough(mobile.id, fl);
+    var faf     = nF * FAF_PER_FLOOR;
+    var isLos   = OPEN_ATRIUM_IDS.has(mobile.id);
+    var eta     = etaInput;
+    var scX=36, scY=27;
+
+    // Build initial particles: seed from floor PRs + random fill
+    var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
+    var particles = [];
+    flPRs.forEach(function(s){
+      particles.push({x:s.x+rand(-2,2),y:s.y+rand(-2,2),z:pz,
+        eta:eta+rand(-0.3,0.3),vx:0,vy:0,bx:s.x,by:s.y,bc:Infinity});
+    });
+    while(particles.length<n){
+      particles.push({x:rand(0,scX),y:rand(0,scY),z:pz,
+        eta:eta+rand(-0.3,0.3),vx:0,vy:0,
+        bx:rand(0,scX),by:rand(0,scY),bc:Infinity});
+    }
+
+    // Init fitness
+    particles.forEach(function(p){
+      p.bc=fitness(p,mRSSI,faf); p.bx=p.x; p.by=p.y;
+    });
+    var gbest=getBest(particles);
+    animState.particles = particles;
+    animState.gbest = gbest;
+    animState.history = [];
+    animState.totalK = K;
+    animState.currentK = 0;
+    animState.faf = faf;
+    animState.mRSSI = mRSSI;
+    animState.floor = fl;
+    animState.K = K;
+    animState.wmin = 0.4; animState.wmax = 0.9;
+    animState.c1 = 2.0;   animState.c2 = 2.0;
+
+    // Record k=0
+    recordSnapshot(0);
+    drawAnimCanvas();
+    updateIterInfo(0);
+    updateConvChart();
+
+    document.getElementById('anim-btn-play').disabled = false;
+    document.getElementById('anim-btn-reset').disabled = false;
+    document.getElementById('anim-btn-next').disabled = false;
+    document.getElementById('anim-btn-prev').disabled = false;
+    document.getElementById('anim-iter-total').textContent = K;
+    document.getElementById('anim-floor-label').textContent =
+      'KNN → '+fl+' | '+mobile.id+' | '+animState.rssiMode.toUpperCase();
+  }
+
+  function recordSnapshot(k){
+    var mobile = animState.mobile;
+    var gbest  = animState.gbest;
+    var err = Math.sqrt((gbest.x-mobile.x)**2+(gbest.y-mobile.y)**2);
+    animState.history.push({
+      k:k,
+      particles: animState.particles.map(function(p){return{x:p.x,y:p.y,bc:p.bc};}),
+      gbest:{x:gbest.x,y:gbest.y,bc:gbest.bc},
+      err:err
+    });
+  }
+
+  function doOneIteration(){
+    if(animState.currentK >= animState.totalK){ pauseAnim(); return; }
+    var k = animState.currentK + 1;
+    var w = animState.wmax - k*(animState.wmax-animState.wmin)/animState.totalK;
+    var scX=36, scY=27;
+
+    animState.particles.forEach(function(p){
+      var r1=Math.random(), r2=Math.random();
+      p.vx=w*p.vx+animState.c1*r1*(p.bx-p.x)+animState.c2*r2*(animState.gbest.x-p.x);
+      p.vy=w*p.vy+animState.c1*r1*(p.by-p.y)+animState.c2*r2*(animState.gbest.y-p.y);
+      p.vx=Math.max(-4,Math.min(4,p.vx));
+      p.vy=Math.max(-4,Math.min(4,p.vy));
+      p.x=Math.max(0,Math.min(scX,p.x+p.vx));
+      p.y=Math.max(0,Math.min(scY,p.y+p.vy));
+      var cost=fitness(p,animState.mRSSI,animState.faf);
+      if(cost<p.bc){p.bc=cost;p.bx=p.x;p.by=p.y;}
+      if(cost<animState.gbest.bc){animState.gbest={x:p.x,y:p.y,bc:cost};}
+    });
+
+    animState.currentK = k;
+    recordSnapshot(k);
+    drawAnimCanvas();
+    updateIterInfo(k);
+    updateConvChart();
+  }
+
+  function playAnim(){
+    if(animState.running) return;
+    animState.running = true;
+    var speed = parseInt(document.getElementById('anim-speed').value)||300;
+    animState.timer = setInterval(function(){
+      if(animState.currentK >= animState.totalK){ pauseAnim(); return; }
+      doOneIteration();
+    }, speed);
+  }
+
+  function pauseAnim(){
+    animState.running = false;
+    if(animState.timer){ clearInterval(animState.timer); animState.timer=null; }
+  }
+
+  function resetAnim(){
+    pauseAnim();
+    animState.history = [];
+    animState.currentK = 0;
+    animState.particles = [];
+    animState.gbest = null;
+    document.getElementById('anim-btn-play').disabled = true;
+    document.getElementById('anim-btn-reset').disabled = true;
+    document.getElementById('anim-btn-next').disabled = true;
+    document.getElementById('anim-btn-prev').disabled = true;
+    document.getElementById('anim-iter-num').textContent='—';
+    document.getElementById('anim-iter-total').textContent='—';
+    document.getElementById('anim-gbest-cost').textContent='—';
+    document.getElementById('anim-gbest-xy').textContent='—';
+    document.getElementById('anim-gbest-err').textContent='—';
+    document.getElementById('anim-iter-log').innerHTML='';
+    clearAnimCanvas();
+  }
+
+  function stepAnim(dir){
+    pauseAnim();
+    if(dir>0 && animState.currentK < animState.totalK) doOneIteration();
+    else if(dir<0 && animState.currentK>0){
+      // replay from history
+      var targetK = animState.currentK - 1;
+      var snap = animState.history[targetK];
+      if(snap){
+        animState.currentK = snap.k;
+        animState.gbest = {x:snap.gbest.x,y:snap.gbest.y,bc:snap.gbest.bc};
+        drawFromSnapshot(snap);
+        updateIterInfo(snap.k);
+      }
+    }
+  }
+
+  // ── DRAW ──
+  function getAnimCanvas(){
+    var el   = document.getElementById('anim-canvas');
+    var wrap = el.parentElement;
+    var W    = wrap.offsetWidth  || 560;
+    var H    = wrap.offsetHeight || Math.round(W * 0.75);
+    if(H < 10) H = Math.round(W * 0.75);
+    var dpr = window.devicePixelRatio || 1;
+    if(el.dataset.w !== String(W)){
+      el.width  = W * dpr;
+      el.height = H * dpr;
+      el.style.width  = W + 'px';
+      el.style.height = H + 'px';
+      el.dataset.w = String(W);
+    }
+    var ctx = el.getContext('2d');
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(dpr, dpr);
+    return {el:el, ctx:ctx, W:W, H:H};
+  }
+
+  var PAD=28, MAP_W=36, MAP_H=27;
+  function cx(rx,W){return PAD+rx/MAP_W*(W-PAD*2);}
+  function cy(ry,H){return PAD+(MAP_H-ry)/MAP_H*(H-PAD*2);}
+
+  function clearAnimCanvas(){
+    var a = getAnimCanvas();
+    a.ctx.fillStyle = '#0a0e18';
+    a.ctx.fillRect(0, 0, a.W, a.H);
+  }
+
+  function drawAnimCanvas(){
+    if(!animState.mobile||!animState.particles.length) return;
+    drawScene(
+      animState.particles.map(function(p){return{x:p.x,y:p.y,bc:p.bc};}),
+      animState.gbest, animState.currentK
+    );
+  }
+
+  function drawFromSnapshot(snap){
+    drawScene(snap.particles, snap.gbest, snap.k);
+  }
+
+  function drawScene(particles, gbest, k){
+    var a   = getAnimCanvas();
+    var W   = a.W, H = a.H;
+    var ctx = a.ctx;
+    // getAnimCanvas already set scale, just clear
+    ctx.fillStyle='#0a0e18';
+    ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.04)';
+    ctx.lineWidth=0.5;
+    for(var gx=0;gx<=36;gx+=6){
+      var lx=cx(gx,W);
+      ctx.beginPath();ctx.moveTo(lx,PAD);ctx.lineTo(lx,H-PAD);ctx.stroke();
+    }
+    for(var gy=0;gy<=27;gy+=6){
+      var ly=cy(gy,H);
+      ctx.beginPath();ctx.moveTo(PAD,ly);ctx.lineTo(W-PAD,ly);ctx.stroke();
+    }
+
+    // Border
+    ctx.strokeStyle='rgba(255,255,255,0.1)';
+    ctx.lineWidth=0.8;
+    ctx.strokeRect(PAD,PAD,W-PAD*2,H-PAD*2);
+
+    // Scale labels
+    ctx.fillStyle='rgba(255,255,255,0.25)';
+    ctx.font='6px IBM Plex Mono,monospace';
+    ctx.textAlign='center';
+    for(var lx2=0;lx2<=36;lx2+=6) ctx.fillText(lx2+'m',cx(lx2,W),H-PAD+10);
+    ctx.textAlign='right';
+    for(var ly2=0;ly2<=27;ly2+=6) ctx.fillText(ly2+'m',PAD-3,cy(ly2,H)+3);
+
+    // Other PR points (reference)
+    var fl = animState.floor;
+    PR_DB.forEach(function(pr){
+      if(pr.id===animState.mobile.id) return;
+      var px=cx(pr.x,W), py=cy(pr.y,H);
+      ctx.beginPath();ctx.arc(px,py,2.5,0,Math.PI*2);
+      ctx.fillStyle='rgba(96,165,250,0.3)';ctx.fill();
+    });
+
+    // AN Nodes (floor 4 only shown as triangles)
+    if(fl==='Floor 4'){
+      ANCHORS.forEach(function(an){
+        var ax=cx(an.x,W), ay=cy(an.y,H);
+        var s=5;
+        ctx.beginPath();ctx.moveTo(ax,ay-s);ctx.lineTo(ax+s,ay+s);ctx.lineTo(ax-s,ay+s);ctx.closePath();
+        ctx.fillStyle='#a855f7';ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.7)';
+        ctx.font='7px IBM Plex Mono,monospace';ctx.textAlign='center';
+        ctx.fillText(an.id,ax,ay-s-3);
+      });
+    }
+
+    // Particles
+    var maxCost=Math.max.apply(null,particles.map(function(p){return p.bc||1;}));
+    particles.forEach(function(p){
+      var ratio = maxCost>0 ? Math.min(1,(p.bc||0)/maxCost) : 0;
+      // Color: hot (red=bad) to cool (green=good)
+      var r=Math.round(239*ratio + 34*(1-ratio));
+      var g=Math.round(68*ratio + 197*(1-ratio));
+      var b=Math.round(68*ratio + 94*(1-ratio));
+      ctx.beginPath();
+      ctx.arc(cx(p.x,W),cy(p.y,H),3,0,Math.PI*2);
+      ctx.fillStyle='rgba('+r+','+g+','+b+',0.75)';ctx.fill();
+    });
+
+    // Trails from gbest history (last 5)
+    var trailStart=Math.max(0,animState.history.length-6);
+    for(var ti=trailStart;ti<animState.history.length-1;ti++){
+      var h1=animState.history[ti], h2=animState.history[ti+1];
+      ctx.beginPath();
+      ctx.moveTo(cx(h1.gbest.x,W),cy(h1.gbest.y,H));
+      ctx.lineTo(cx(h2.gbest.x,W),cy(h2.gbest.y,H));
+      ctx.strokeStyle='rgba(250,204,21,0.4)';ctx.lineWidth=1.5;ctx.stroke();
+    }
+
+    // gbest star
+    if(gbest){
+      var gx2=cx(gbest.x,W), gy2=cy(gbest.y,H);
+      ctx.beginPath();ctx.arc(gx2,gy2,6,0,Math.PI*2);
+      ctx.fillStyle='rgba(250,204,21,0.15)';ctx.fill();
+      ctx.beginPath();ctx.arc(gx2,gy2,4,0,Math.PI*2);
+      ctx.fillStyle='#facc15';ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.font='bold 7px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText('gbest',gx2,gy2-8);
+      ctx.fillText('('+gbest.x.toFixed(1)+','+gbest.y.toFixed(1)+')',gx2,gy2+14);
+    }
+
+    // Mobile (true position) — green star
+    var mob=animState.mobile;
+    var mx=cx(mob.x,W), my=cy(mob.y,H);
+    // Pulse ring
+    ctx.beginPath();ctx.arc(mx,my,10,0,Math.PI*2);
+    ctx.strokeStyle='rgba(34,197,94,0.3)';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);
+    ctx.fillStyle='#22c55e';ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.font='bold 7px IBM Plex Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(mob.id,mx,my-9);
+    ctx.fillText('(จริง)',mx,my+15);
+
+    // Error line: gbest → mobile
+    if(gbest){
+      var err=Math.sqrt((gbest.x-mob.x)**2+(gbest.y-mob.y)**2);
+      ctx.beginPath();
+      ctx.moveTo(cx(gbest.x,W),cy(gbest.y,H));
+      ctx.lineTo(mx,my);
+      ctx.strokeStyle='rgba(239,68,68,0.6)';ctx.lineWidth=1.2;
+      ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+      // Error label midpoint
+      var emx=(cx(gbest.x,W)+mx)/2, emy=(cy(gbest.y,H)+my)/2;
+      ctx.fillStyle='#ef4444';
+      ctx.font='bold 8px IBM Plex Mono,monospace';ctx.textAlign='center';
+      ctx.fillText(err.toFixed(2)+'m',emx,emy-4);
+    }
+
+    // Iteration label
+    ctx.fillStyle='rgba(255,255,255,0.5)';
+    ctx.font='bold 9px IBM Plex Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('k = '+k+' / '+animState.totalK,PAD+2,PAD-8);
+    ctx.fillStyle=OPEN_ATRIUM_IDS.has(mob.id)?'#f59e0b':'#3b82f6';
+    ctx.fillText(fl,PAD+2,PAD-18);
+  }
+
+  function updateIterInfo(k){
+    var snap = animState.history[k];
+    if(!snap) return;
+    document.getElementById('anim-iter-num').textContent = k;
+    document.getElementById('anim-gbest-cost').textContent = snap.gbest.bc.toFixed(3);
+    document.getElementById('anim-gbest-xy').textContent = snap.gbest.x.toFixed(2)+', '+snap.gbest.y.toFixed(2);
+    document.getElementById('anim-gbest-err').textContent = snap.err.toFixed(2);
+
+    // Append row to log table
+    var tbody = document.getElementById('anim-iter-log');
+    var errColor = snap.err<2?'#22c55e':snap.err<4?'#f59e0b':'#ef4444';
+    var tr = document.createElement('tr');
+    tr.style.background = k%2===0?'transparent':'rgba(255,255,255,0.02)';
+    tr.innerHTML='<td style="padding:4px 8px;font-family:var(--mono);color:var(--muted)">'+k+'</td>'+
+      '<td style="padding:4px 8px;font-family:var(--mono);color:#3b82f6">'+snap.gbest.x.toFixed(2)+'</td>'+
+      '<td style="padding:4px 8px;font-family:var(--mono);color:#3b82f6">'+snap.gbest.y.toFixed(2)+'</td>'+
+      '<td style="padding:4px 8px;font-family:var(--mono);color:#10b981">'+snap.gbest.bc.toFixed(3)+'</td>'+
+      '<td style="padding:4px 8px;font-family:var(--mono);color:'+errColor+'">'+snap.err.toFixed(2)+'</td>';
+    tbody.appendChild(tr);
+    tbody.parentElement.scrollTop = tbody.parentElement.scrollHeight;
+  }
+
+  function updateConvChart(){
+    var history = animState.history;
+    var labels  = history.map(function(h){return 'k='+h.k;});
+    var costData = history.map(function(h){return +h.gbest.bc.toFixed(3);});
+    var errData  = history.map(function(h){return +h.err.toFixed(3);});
+
+    if(animState.convChart) animState.convChart.destroy();
+    var ctx2 = document.getElementById('anim-conv-chart').getContext('2d');
+    animState.convChart = new Chart(ctx2,{
+      type:'line',
+      data:{labels:labels,datasets:[
+        {label:'Fitness (cost)',data:costData,borderColor:'#a855f7',
+         backgroundColor:'rgba(168,85,247,0.08)',pointRadius:2,tension:.35,borderWidth:1.5,fill:true,yAxisID:'y'},
+        {label:'Error (m)',data:errData,borderColor:'#f59e0b',
+         backgroundColor:'rgba(245,158,11,0.06)',pointRadius:2,tension:.35,borderWidth:1.5,fill:false,yAxisID:'y2'}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,labels:{color:'#6b7a99',font:{size:10},boxWidth:10,padding:10}}},
+        scales:{
+          y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#6b7a99',font:{size:9}}},
+          y2:{position:'right',beginAtZero:true,grid:{display:false},ticks:{color:'#f59e0b',font:{size:9}}}
+        }
+      }
+    });
+  }
+})(); // end animator
+
 })();
 </script>
 </body>
