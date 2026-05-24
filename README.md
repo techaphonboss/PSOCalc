@@ -103,7 +103,7 @@ th{padding:10px 14px;text-align:left;font-size:10px;font-weight:700;letter-spaci
 th.blue{color:var(--blue);}th.amber{color:var(--amber);}th.green{color:var(--green);}th.rose{color:var(--rose);}th.purple{color:var(--purple);}
 td{padding:9px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text);vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:rgba(255,255,255,0.025);}
+tbody tr:hover{background:rgba(168,85,247,0.07);}
 
 .badge{display:inline-block;padding:2px 9px;border-radius:var(--rs);font-size:10px;font-weight:700;font-family:var(--mono);border:1px solid transparent;white-space:nowrap;}
 .badge-ok{background:var(--ok-dim);color:var(--ok);border-color:var(--ok-b);}
@@ -261,17 +261,20 @@ select option{background:#111827;color:#f0f2f7;}
       <div class="sec-title">ผลลัพธ์ Hybrid KNN → PSO</div>
 
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px;">
-
         <!-- Measurement side -->
         <div style="background:var(--bg3);border:1px solid var(--purple-b);border-radius:var(--r);padding:16px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:12px;">
             Measurement (RSSI วัดจริง)
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">KNN+PSO Accuracy</div><div class="prc-value" id="pso-acc-m">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Avg. XY Error</div><div class="prc-value" id="pso-avg-err-m">—</div><div class="prc-sub">เมตร</div></div>
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Error &lt; 4m</div><div class="prc-value" id="pso-lt4-m">—</div><div class="prc-sub">จำนวน PR</div></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Accuracy</div><div class="prc-value" id="pso-acc-m">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--ok)">≤ 3m</div><div class="prc-value" id="pso-lt3-m">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--amber)">≤ 6m</div><div class="prc-value" id="pso-lt6-m">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--rose)">≤ 10m</div><div class="prc-value" id="pso-lt10-m">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--purple)">Avg Error</div><div class="prc-value" id="pso-avg-err-m">—</div><div class="prc-sub">เมตร</div></div>
           </div>
+          <!-- Per-floor avg error Meas -->
+          <div style="margin-top:10px;" id="pso-floor-err-m"></div>
         </div>
 
         <!-- RSSI Predict side -->
@@ -279,21 +282,39 @@ select option{background:#111827;color:#f0f2f7;}
           <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:12px;">
             RSSI Predict (diff floor model)
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">KNN+PSO Accuracy</div><div class="prc-value" id="pso-acc-r">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Avg. XY Error</div><div class="prc-value" id="pso-avg-err-r">—</div><div class="prc-sub">เมตร</div></div>
-            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Error &lt; 4m</div><div class="prc-value" id="pso-lt4-r">—</div><div class="prc-sub">จำนวน PR</div></div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Accuracy</div><div class="prc-value" id="pso-acc-r">—</div><div class="prc-sub">ชั้นถูกต้อง</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--ok)">≤ 3m</div><div class="prc-value" id="pso-lt3-r">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--amber)">≤ 6m</div><div class="prc-value" id="pso-lt6-r">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--rose)">≤ 10m</div><div class="prc-value" id="pso-lt10-r">—</div><div class="prc-sub">PR</div></div>
+            <div class="pso-result-card"><div class="prc-label" style="color:var(--green)">Avg Error</div><div class="prc-value" id="pso-avg-err-r">—</div><div class="prc-sub">เมตร</div></div>
           </div>
+          <!-- Per-floor avg error RSSI -->
+          <div style="margin-top:10px;" id="pso-floor-err-r"></div>
         </div>
-
       </div>
 
-      <div class="chart-card-full"><div class="chart-head"><div><div class="chart-title">PSO Fitness ลู่เข้าตามรอบ Iteration</div><div class="chart-sub">ค่า Fitness ควรลดลงทุก iteration — แสดงการ converge</div></div></div><div class="chart-wrap-tall"><canvas id="psoConvergeChart"></canvas></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+        <div class="chart-card-full" style="margin-bottom:0">
+          <div class="chart-head"><div>
+            <div class="chart-title" style="color:var(--purple)">Convergence — Measurement (AVG รวม)</div>
+            <div class="chart-sub">Fitness ลู่เข้าตาม iteration · Meas. RSSI</div>
+          </div></div>
+          <div class="chart-wrap-tall"><canvas id="psoConvergeChartM"></canvas></div>
+        </div>
+        <div class="chart-card-full" style="margin-bottom:0">
+          <div class="chart-head"><div>
+            <div class="chart-title" style="color:var(--green)">Convergence — RSSI Predict (AVG รวม)</div>
+            <div class="chart-sub">Fitness ลู่เข้าตาม iteration · RSSI Pred.</div>
+          </div></div>
+          <div class="chart-wrap-tall"><canvas id="psoConvergeChart"></canvas></div>
+        </div>
+      </div>
 
       <div class="table-card">
         <div class="table-head">
           <div><div class="th-title">ผลลัพธ์ Hybrid KNN→PSO ทุก Particle</div>
-          <div class="th-sub">KNN ทำนายชั้น → PSO หาพิกัด XY เฉพาะชั้นนั้น · แยก Measurement vs RSSI Predict</div></div>
+          <div class="th-sub">คลิกที่แถว (ซ้าย=Meas, ขวา=RSSI) เพื่อดู Particle ที่นำไป PSO · KNN ทำนายชั้น → PSO หาพิกัด XY เฉพาะชั้นนั้น</div></div>
           <div class="table-head-right"><span class="count-pill" id="pso-count">0</span></div>
         </div>
         <div class="tbl-scroll">
@@ -502,6 +523,15 @@ select option{background:#111827;color:#f0f2f7;}
       </div>
     </div>
   </div>
+<!-- Deviation Popup Modal -->
+<div id="dev-popup-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;backdrop-filter:blur(4px);" onclick="document.getElementById('dev-popup-overlay').style.display='none'"></div>
+<div id="dev-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:20px;min-width:360px;max-width:520px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div id="dev-popup-title" style="font-size:14px;font-weight:700;color:var(--text);"></div>
+    <button onclick="document.getElementById('dev-popup-overlay').style.display='none';document.getElementById('dev-popup').style.display='none';" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">×</button>
+  </div>
+  <div id="dev-popup-body"></div>
+</div>
 
 </main>
 
@@ -584,7 +614,8 @@ const TICK_C = '#6b7a99';
 var knnLogs = [];
 var psoLogs = [];
 var charts = {};
-var psoIterAvg = [];
+var psoIterAvg  = [];
+var psoIterAvgM = [];
 
 // ── TABS ──
 document.querySelectorAll('.nav-tab').forEach(function(btn){
@@ -722,22 +753,89 @@ function renderOverview(){
 
 // ── Deviation ──
 function renderDeviation(){
-  var methods=[{key:'gMT3',label:'Meas.Top3',color:C[0]},{key:'gMA',label:'Meas.Avg',color:C[1]},{key:'gRT3',label:'RSSI Top3',color:C[2]},{key:'gRA',label:'RSSI Avg',color:C[3]}];
-  var dc=document.getElementById('dev-cards');dc.innerHTML='';
-  var allCounts=[];
+  var dc = document.getElementById('dev-cards');
+  dc.innerHTML = '';
+  var allCounts = [];
+
+  // ใช้แค่ 2 วิธี: Meas.Avg และ RSSI.Avg (จาก KNN logs)
+  var methods = [
+    {key:'gMA',  label:'Meas.Avg',  color:C[1], resultKey:'mAvg'},
+    {key:'gRA',  label:'RSSI Avg',  color:C[3], resultKey:'rAvg'}
+  ];
+
+  // สร้าง lookup ว่า PR แต่ละตัวทำนายชั้นไหน (สำหรับ popup)
+  function getWrongPRs(gapVal, methodResultKey){
+    return knnLogs.filter(function(l){
+      var gapKey = methodResultKey==='mAvg' ? 'gMA' : 'gRA';
+      return l[gapKey] === gapVal && gapVal > 0;
+    }).map(function(l){
+      var predRaw = l[methodResultKey]; // เช่น "ผิด→ชั้น 3"
+      var predicted = predRaw.replace('ผิด→','');
+      return {id:l.id, actualFloor:l.floor, predicted:predicted, gap:gapVal};
+    });
+  }
+
   methods.forEach(function(m){
-    var d={0:0,1:0,2:0,3:0};
-    knnLogs.forEach(function(l){var v=l[m.key];if(d[v]!==undefined)d[v]++;});
+    var d = {0:0,1:0,2:0,3:0};
+    knnLogs.forEach(function(l){
+      var v = l[m.key];
+      if(d[v]!==undefined) d[v]++;
+    });
     allCounts.push(d);
-    var c=document.createElement('div');c.className='dev-card';
-    var maxV=Math.max(d[0],d[1],d[2],d[3])||1;
-    c.innerHTML='<div class="dev-card-title" style="color:'+m.color+'">'+m.label+'</div><div class="dev-rows">'+
-      [['✅ ถูกชั้น',d[0],'#22c55e'],['+1 ชั้น',d[1],C[1]],['+2 ชั้น',d[2],C[3]],['+3 ชั้น',d[3],'#ef4444']].map(function(r){
-        return '<div class="dev-row"><span class="dev-label">'+r[0]+'</span><div class="dev-bar-wrap"><div class="dev-bar" style="width:'+((r[1]/maxV)*100).toFixed(0)+'%;background:'+r[2]+'"></div></div><span class="dev-count">'+r[1]+'</span></div>';
-      }).join('')+'</div>';
-    dc.appendChild(c);
+
+    var maxV = Math.max(d[0],d[1],d[2],d[3]) || 1;
+    var card = document.createElement('div');
+    card.className = 'dev-card';
+
+    var rows = [
+      {label:'✅ ถูกชั้น', gap:0, color:'#22c55e'},
+      {label:'+1 ชั้น',    gap:1, color:C[1]},
+      {label:'+2 ชั้น',    gap:2, color:C[3]},
+      {label:'+3 ชั้น',    gap:3, color:'#ef4444'}
+    ].map(function(r){
+      var cnt = d[r.gap];
+      var clickable = r.gap > 0 && cnt > 0;
+      var countEl;
+      if(clickable){
+        // store data in window registry to avoid inline JSON quote issues
+        var key = 'dev_'+m.resultKey+'_gap'+r.gap;
+        window._devData = window._devData || {};
+        window._devData[key] = getWrongPRs(r.gap, m.resultKey);
+        var popupTitle = m.label+' — คลาดเคลื่อน '+r.gap+' ชั้น ('+cnt+' PR)';
+        window._devData[key+'_title'] = popupTitle;
+        countEl = '<span class="dev-count" style="color:'+r.color+
+          ';cursor:pointer;text-decoration:underline dotted;border-bottom:1px dotted '+r.color+';" '+
+          'onclick="window.showDevPopup(window._devData[\''+key+'_title\'],window._devData[\''+key+'\'])">'+
+          cnt+'</span>';
+      } else {
+        countEl = '<span class="dev-count" style="color:'+r.color+'">'+cnt+'</span>';
+      }
+      return '<div class="dev-row">'+
+        '<span class="dev-label">'+r.label+'</span>'+
+        '<div class="dev-bar-wrap"><div class="dev-bar" style="width:'+((cnt/maxV)*100).toFixed(0)+'%;background:'+r.color+'"></div></div>'+
+        countEl+'</div>';
+    }).join('');
+
+    card.innerHTML = '<div class="dev-card-title" style="color:'+m.color+'">'+m.label+'</div>'+
+      '<div class="dev-rows">'+rows+'</div>';
+    dc.appendChild(card);
   });
-  mkChart('devChart',{type:'bar',data:{labels:['0 ชั้น (ถูก)','+1 ชั้น','+2 ชั้น','+3 ชั้น'],datasets:[{label:'Meas.Top3',data:[allCounts[0][0],allCounts[0][1],allCounts[0][2],allCounts[0][3]],backgroundColor:C[0],borderRadius:5},{label:'Meas.Avg',data:[allCounts[1][0],allCounts[1][1],allCounts[1][2],allCounts[1][3]],backgroundColor:C[1],borderRadius:5},{label:'RSSI Top3',data:[allCounts[2][0],allCounts[2][1],allCounts[2][2],allCounts[2][3]],backgroundColor:C[2],borderRadius:5},{label:'RSSI Avg',data:[allCounts[3][0],allCounts[3][1],allCounts[3][2],allCounts[3][3]],backgroundColor:C[3],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:11},boxWidth:12,padding:12}}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C,stepSize:1}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+
+  // Bar chart เฉพาะ 2 วิธี
+  mkChart('devChart',{
+    type:'bar',
+    data:{
+      labels:['0 ชั้น (ถูก)','+1 ชั้น','+2 ชั้น','+3 ชั้น'],
+      datasets:[
+        {label:'Meas. Avg',data:[allCounts[0][0],allCounts[0][1],allCounts[0][2],allCounts[0][3]],backgroundColor:C[1],borderRadius:5},
+        {label:'RSSI Avg', data:[allCounts[1][0],allCounts[1][1],allCounts[1][2],allCounts[1][3]],backgroundColor:C[3],borderRadius:5}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{color:TICK_C,font:{size:11},boxWidth:12,padding:12}}},
+      scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C,stepSize:1}},
+              x:{grid:{display:false},ticks:{color:TICK_C}}}}
+  });
 }
 
 // ── Compare Line ──
@@ -786,85 +884,46 @@ function runPSOAll(){
 
   setTimeout(function(){
     psoLogs = [];
-    psoIterAvg = Array(K).fill(0);
+    psoIterAvg  = Array(K).fill(0); // RSSI Pred convergence
+    psoIterAvgM = Array(K).fill(0); // Meas convergence
 
     PR_DB.forEach(function(mobile, idx){
       document.getElementById('pso-progress').textContent =
         'คำนวณ '+(idx+1)+'/'+PR_DB.length+'... ['+mobile.id+']';
 
-      // ── HYBRID: KNN ทำนายชั้นก่อน → PSO เฉพาะชั้นนั้น ──
-      // หา KNN floor prediction จาก mRSSI
-      var knnFloorM = knnPredictFloor(mobile.mRSSI, mobile.id);
-      // หา KNN floor prediction จาก pRSSI
-      var knnFloorR = knnPredictFloor(mobile.pRSSI, mobile.id);
+      // KNN Avg รวม — แยก Meas vs RSSI Pred
+      var knnM = knnPredictFloor(mobile.mRSSI, mobile.id); // {floor, seeds, scores}
+      var knnR = knnPredictFloor(mobile.pRSSI, mobile.id);
 
-      // รัน PSO เฉพาะใน floor ที่ KNN ทำนาย
-      var rM = psoRunHybrid(mobile.mRSSI, mobile, knnFloorM, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
-      var rR = psoRunHybrid(mobile.pRSSI, mobile, knnFloorR, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
+      // PSO เฉพาะใน floor ที่ KNN ทำนาย โดยใช้แค่ PR ในชั้นนั้น
+      var rM = psoRunHybrid(mobile.mRSSI, mobile, knnM, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
+      var rR = psoRunHybrid(mobile.pRSSI, mobile, knnR, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos);
 
-      rR.iterFitness.forEach(function(v,i){ psoIterAvg[i] += v; });
+      rM.iterFitness.forEach(function(v,i){ psoIterAvgM[i] += v; });
+      rR.iterFitness.forEach(function(v,i){ psoIterAvg[i]  += v; });
 
-      // แยก error ระหว่าง Meas. และ RSSI Pred.
       var xyErrM = Math.sqrt((rM.gx-mobile.x)**2 + (rM.gy-mobile.y)**2);
       var xyErrR = Math.sqrt((rR.gx-mobile.x)**2 + (rR.gy-mobile.y)**2);
+      var gapM   = Math.abs(parseInt(mobile.floor.replace('Floor ','')) - parseInt(knnM.floor.replace('Floor ','')));
+      var gapR   = Math.abs(parseInt(mobile.floor.replace('Floor ','')) - parseInt(knnR.floor.replace('Floor ','')));
 
       psoLogs.push({
         floor:mobile.floor, id:mobile.id,
         px:mobile.x, py:mobile.y,
-        knnFloorM:knnFloorM, knnFloorR:knnFloorR,
-        predFloorM:rM.predFloor, gxM:rM.gx, gyM:rM.gy, costM:rM.gcost, xyErrM:xyErrM,
-        predFloorR:rR.predFloor, gxR:rR.gx, gyR:rR.gy, costR:rR.gcost, xyErrR:xyErrR
+        knnFloorM:knnM.floor, seedIdsM:rM.seedIds,
+        knnFloorR:knnR.floor, seedIdsR:rR.seedIds,
+        predFloorM:rM.predFloor, gxM:rM.gx, gyM:rM.gy, costM:rM.gcost, xyErrM:xyErrM, gapM:gapM,
+        predFloorR:rR.predFloor, gxR:rR.gx, gyR:rR.gy, costR:rR.gcost, xyErrR:xyErrR, gapR:gapR
       });
     });
 
-    psoIterAvg = psoIterAvg.map(function(v){ return +(v/PR_DB.length).toFixed(3); });
+    psoIterAvg  = psoIterAvg.map(function(v){ return +(v/PR_DB.length).toFixed(3); });
+    psoIterAvgM = psoIterAvgM.map(function(v){ return +(v/PR_DB.length).toFixed(3); });
     renderPSOResults();
     setStatus('done','Hybrid KNN→PSO เสร็จ — 55 Particles');
     document.getElementById('pso-progress').textContent = 'เสร็จสิ้น ✓';
     document.getElementById('btn-export-pso').style.display = '';
   }, 50);
-}
-
-// ── KNN Floor Prediction (ใช้ข้อมูล PR_DB เป็น reference) ──
-function knnPredictFloor(mobileRSSI, mobileId){
-  var floorDist = {};
-  FLOORS.forEach(function(fl){ floorDist[fl] = []; });
-
-  PR_DB.forEach(function(pr){
-    if(pr.id === mobileId) return; // leave-one-out
-    var d = euclid3RSSI(mobileRSSI, pr.pRSSI);
-    if(floorDist[pr.floor]) floorDist[pr.floor].push(d);
-  });
-
-  // Top-3 ต่อชั้น (วิธีที่แม่นที่สุดจาก KNN ของเรา)
-  var floorScores = {};
-  FLOORS.forEach(function(fl){
-    var dList = floorDist[fl].slice().sort(function(a,b){return a-b;});
-    var top3 = dList.filter(function(v){return v>0;}).slice(0,3);
-    floorScores[fl] = top3.length>0 ? top3.reduce(function(a,b){return a+b;},0)/top3.length : 999;
-  });
-  return FLOORS.reduce(function(a,b){ return floorScores[a]<floorScores[b]?a:b; });
-}
-
-function euclid3RSSI(a, b){
-  return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
-}
-
-// ── PSO แบบ Hybrid — รันเฉพาะชั้นที่ KNN บอก ──
-function psoRunHybrid(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
-  var results = [];
-  for(var r=0; r<R; r++){
-    results.push(psoRunOneFloor(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, etaLos, etaNlos));
-  }
-  // เฉลี่ย XY จากทุก run
-  var avgX = results.reduce(function(s,r){return s+r.gx;},0)/results.length;
-  var avgY = results.reduce(function(s,r){return s+r.gy;},0)/results.length;
-  var best = results.reduce(function(a,b){ return a.gcost<b.gcost?a:b; });
-  return {
-    gx:+(avgX.toFixed(2)), gy:+(avgY.toFixed(2)),
-    gcost:+(best.gcost.toFixed(3)), predFloor:targetFloor,
-    iterFitness:best.iterFitness
-  };
 }
 
 // ── FLOOR / ENVIRONMENT CONFIG ──
@@ -927,102 +986,118 @@ function backsolveEta(){
     detail:'LoS('+losVals.length+')='+losEta+' NLoS('+nlosVals.length+')='+nlosEta};
 }
 
+// ── KNN: ใช้ Avg รวม เท่านั้น (ตามที่กำหนด) ──
+// คืนค่า {floor, seeds} โดย seeds = PR ในชั้นที่ทำนายเท่านั้น
 function knnPredictFloor(mobileRSSI, mobileId){
-  var flDist={};
-  FLOORS.forEach(function(fl){flDist[fl]=[];});
+  var flDist = {};
+  FLOORS.forEach(function(fl){ flDist[fl] = []; });
+
   PR_DB.forEach(function(pr){
-    if(pr.id===mobileId) return;
-    var d=Math.sqrt(
-      (mobileRSSI[0]-pr.pRSSI[0])**2+
-      (mobileRSSI[1]-pr.pRSSI[1])**2+
+    if(pr.id === mobileId) return; // leave-one-out
+    var d = Math.sqrt(
+      (mobileRSSI[0]-pr.pRSSI[0])**2 +
+      (mobileRSSI[1]-pr.pRSSI[1])**2 +
       (mobileRSSI[2]-pr.pRSSI[2])**2
     );
-    if(flDist[pr.floor]) flDist[pr.floor].push(d);
+    if(flDist[pr.floor]) flDist[pr.floor].push({pr:pr, d:d});
   });
-  var scores={};
+
+  // Avg รวม: เฉลี่ยระยะทุกตัวในชั้น
+  var scores = {};
   FLOORS.forEach(function(fl){
-    var s=flDist[fl].slice().sort(function(a,b){return a-b;});
-    var top=s.filter(function(v){return v>0;}).slice(0,3);
-    scores[fl]=top.length?top.reduce(function(a,b){return a+b;},0)/top.length:999;
+    var items = flDist[fl];
+    if(!items.length){ scores[fl] = 999; return; }
+    scores[fl] = items.reduce(function(s,x){return s+x.d;},0) / items.length;
   });
-  return FLOORS.reduce(function(a,b){return scores[a]<scores[b]?a:b;});
+
+  var bestFloor = FLOORS.reduce(function(a,b){ return scores[a]<scores[b]?a:b; });
+  // seeds = PR ในชั้นที่ทำนาย เรียงจากใกล้ → ไกล
+  var seeds = flDist[bestFloor].slice().sort(function(a,b){return a.d-b.d;}).map(function(x){return x.pr;});
+  return { floor: bestFloor, seeds: seeds, scores: scores };
 }
 
 function euclid3RSSI(a,b){
   return Math.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2);
 }
 
-// PSO + Local grid search refinement
-function psoRunHybrid(mobileRSSI, mobile, targetFloor, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
-  var runs=[];
-  for(var r=0;r<R;r++){
-    runs.push(psoRunOneFloor(mobileRSSI,mobile,targetFloor,n,K,wmin,wmax,c1,c2,etaLos,etaNlos));
+// ── PSO: ใช้เฉพาะ PR ในชั้นที่ KNN ทำนาย เป็น seed ──
+function psoRunHybrid(mobileRSSI, mobile, knnResult, n, K, wmin, wmax, c1, c2, R, etaLos, etaNlos){
+  var targetFloor = knnResult.floor;
+  var seeds       = knnResult.seeds; // PR ในชั้นนั้นเท่านั้น
+  var runs = [];
+  for(var r=0; r<R; r++){
+    runs.push(psoRunOneFloor(mobileRSSI, mobile, targetFloor, seeds, n, K, wmin, wmax, c1, c2, etaLos, etaNlos));
   }
-  var avgX=runs.reduce(function(s,r){return s+r.gx;},0)/runs.length;
-  var avgY=runs.reduce(function(s,r){return s+r.gy;},0)/runs.length;
-  var best=runs.reduce(function(a,b){return a.gcost<b.gcost?a:b;});
+  var avgX = runs.reduce(function(s,r){return s+r.gx;},0)/runs.length;
+  var avgY = runs.reduce(function(s,r){return s+r.gy;},0)/runs.length;
+  var best = runs.reduce(function(a,b){return a.gcost<b.gcost?a:b;});
+
   // Local grid refinement ±2m step 0.2m
-  var pz=getZ(targetFloor);
-  var nF=floorsThrough(mobile.id,targetFloor);
-  var faf=nF*FAF_PER_FLOOR;
-  var etaMid=OPEN_ATRIUM_IDS.has(mobile.id)?etaLos:etaNlos;
-  var bestL={x:avgX,y:avgY,c:best.gcost};
-  for(var dx=-2;dx<=2;dx+=0.2){
-    for(var dy=-2;dy<=2;dy+=0.2){
-      var tx=Math.max(0,Math.min(36,avgX+dx));
-      var ty=Math.max(0,Math.min(27,avgY+dy));
-      var p={x:tx,y:ty,z:pz,eta:etaMid};
-      var c=fitness(p,mobileRSSI,faf);
-      if(c<bestL.c) bestL={x:tx,y:ty,c:c};
+  var pz  = getZ(targetFloor);
+  var nF  = floorsThrough(mobile.id, targetFloor);
+  var faf = nF * FAF_PER_FLOOR;
+  var etaMid = OPEN_ATRIUM_IDS.has(mobile.id) ? etaLos : etaNlos;
+  var bestL = {x:avgX, y:avgY, c:best.gcost};
+  for(var dx=-2; dx<=2; dx+=0.2){
+    for(var dy=-2; dy<=2; dy+=0.2){
+      var tx = Math.max(0,Math.min(36,avgX+dx));
+      var ty = Math.max(0,Math.min(27,avgY+dy));
+      var p  = {x:tx, y:ty, z:pz, eta:etaMid};
+      var c  = fitness(p, mobileRSSI, faf);
+      if(c < bestL.c) bestL = {x:tx, y:ty, c:c};
     }
   }
   return{
-    gx:+(bestL.x.toFixed(2)),gy:+(bestL.y.toFixed(2)),
-    gcost:+(bestL.c.toFixed(3)),predFloor:targetFloor,
-    iterFitness:best.iterFitness
+    gx: +(bestL.x.toFixed(2)), gy: +(bestL.y.toFixed(2)),
+    gcost: +(bestL.c.toFixed(3)), predFloor: targetFloor,
+    iterFitness: best.iterFitness,
+    seedIds: seeds.map(function(s){return s.id;}) // PR ที่ใช้เป็น seed
   };
 }
 
-function psoRunOneFloor(mobileRSSI, mobile, fl, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
+function psoRunOneFloor(mobileRSSI, mobile, fl, seeds, n, K, wmin, wmax, c1, c2, etaLos, etaNlos){
   var scatterX=36, scatterY=27;
-  var pz=getZ(fl);
-  var nF=floorsThrough(mobile.id,fl);
-  var faf=nF*FAF_PER_FLOOR;
-  var isLos=OPEN_ATRIUM_IDS.has(mobile.id);
-  var etaMid=isLos?etaLos:etaNlos;
-  var etaLo=Math.max(1.0,etaMid-0.5);
-  var etaHi=Math.min(6.0,etaMid+0.5);
-  var flPRs=PR_DB.filter(function(p){return p.floor===fl;});
-  var particles=[];
-  flPRs.forEach(function(s){
-    particles.push({x:s.x+rand(-1.5,1.5),y:s.y+rand(-1.5,1.5),z:pz,
-      eta:rand(etaLo,etaHi),vx:0,vy:0,bx:s.x,by:s.y,bc:Infinity});
+  var pz  = getZ(fl);
+  var nF  = floorsThrough(mobile.id, fl);
+  var faf = nF * FAF_PER_FLOOR;
+  var isLos  = OPEN_ATRIUM_IDS.has(mobile.id);
+  var etaMid = isLos ? etaLos : etaNlos;
+  var etaLo  = Math.max(1.0, etaMid-0.5);
+  var etaHi  = Math.min(6.0, etaMid+0.5);
+
+  var particles = [];
+  // Seed จาก PR ในชั้นนั้นเท่านั้น (seeds array)
+  seeds.forEach(function(s){
+    particles.push({x:s.x+rand(-1.5,1.5), y:s.y+rand(-1.5,1.5), z:pz,
+      eta:rand(etaLo,etaHi), vx:0, vy:0, bx:s.x, by:s.y, bc:Infinity});
   });
-  while(particles.length<n){
-    particles.push({x:rand(0,scatterX),y:rand(0,scatterY),z:pz,
-      eta:rand(etaLo,etaHi),vx:0,vy:0,
-      bx:rand(0,scatterX),by:rand(0,scatterY),bc:Infinity});
+  // เติม random จนครบ n
+  while(particles.length < n){
+    particles.push({x:rand(0,scatterX), y:rand(0,scatterY), z:pz,
+      eta:rand(etaLo,etaHi), vx:0, vy:0,
+      bx:rand(0,scatterX), by:rand(0,scatterY), bc:Infinity});
   }
-  particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf);p.bx=p.x;p.by=p.y;});
-  var gbest=getBest(particles);
-  var iterFitness=[];
-  for(var k=1;k<=K;k++){
-    var w=wmax-k*(wmax-wmin)/K;
+
+  particles.forEach(function(p){p.bc=fitness(p,mobileRSSI,faf); p.bx=p.x; p.by=p.y;});
+  var gbest = getBest(particles);
+  var iterFitness = [];
+  for(var k=1; k<=K; k++){
+    var w = wmax - k*(wmax-wmin)/K;
     particles.forEach(function(p){
-      var r1=Math.random(),r2=Math.random();
-      p.vx=w*p.vx+c1*r1*(p.bx-p.x)+c2*r2*(gbest.x-p.x);
-      p.vy=w*p.vy+c1*r1*(p.by-p.y)+c2*r2*(gbest.y-p.y);
-      p.vx=Math.max(-4,Math.min(4,p.vx));
-      p.vy=Math.max(-4,Math.min(4,p.vy));
-      p.x=Math.max(0,Math.min(scatterX,p.x+p.vx));
-      p.y=Math.max(0,Math.min(scatterY,p.y+p.vy));
-      var cost=fitness(p,mobileRSSI,faf);
-      if(cost<p.bc){p.bc=cost;p.bx=p.x;p.by=p.y;}
-      if(cost<gbest.bc){gbest={x:p.x,y:p.y,bc:cost};}
+      var r1=Math.random(), r2=Math.random();
+      p.vx = w*p.vx + c1*r1*(p.bx-p.x) + c2*r2*(gbest.x-p.x);
+      p.vy = w*p.vy + c1*r1*(p.by-p.y) + c2*r2*(gbest.y-p.y);
+      p.vx = Math.max(-4,Math.min(4,p.vx));
+      p.vy = Math.max(-4,Math.min(4,p.vy));
+      p.x  = Math.max(0,Math.min(scatterX, p.x+p.vx));
+      p.y  = Math.max(0,Math.min(scatterY, p.y+p.vy));
+      var cost = fitness(p, mobileRSSI, faf);
+      if(cost < p.bc){ p.bc=cost; p.bx=p.x; p.by=p.y; }
+      if(cost < gbest.bc){ gbest={x:p.x,y:p.y,bc:cost}; }
     });
     iterFitness.push(gbest.bc);
   }
-  return{gx:gbest.x,gy:gbest.y,gcost:gbest.bc,iterFitness:iterFitness};
+  return {gx:gbest.x, gy:gbest.y, gcost:gbest.bc, iterFitness:iterFitness};
 }
 
 function getBest(particles){
@@ -1109,54 +1184,198 @@ document.getElementById('btn-auto-tune').addEventListener('click',function(){
 
 function renderPSOResults(){
   var t = psoLogs.length;
-  var okM  = psoLogs.filter(function(l){return l.predFloorM===l.floor;}).length;
-  var okR  = psoLogs.filter(function(l){return l.predFloorR===l.floor;}).length;
+  var okM = psoLogs.filter(function(l){return l.predFloorM===l.floor;}).length;
+  var okR = psoLogs.filter(function(l){return l.predFloorR===l.floor;}).length;
   var avgErrM = (psoLogs.reduce(function(s,l){return s+l.xyErrM;},0)/t).toFixed(2);
   var avgErrR = (psoLogs.reduce(function(s,l){return s+l.xyErrR;},0)/t).toFixed(2);
-  // error <4m count
-  var lt4M = psoLogs.filter(function(l){return l.xyErrM<4;}).length;
-  var lt4R = psoLogs.filter(function(l){return l.xyErrR<4;}).length;
 
-  document.getElementById('pso-acc-m').textContent    = ((okM/t)*100).toFixed(1)+'%';
-  document.getElementById('pso-acc-r').textContent    = ((okR/t)*100).toFixed(1)+'%';
+  // Error thresholds
+  var lt3M  = psoLogs.filter(function(l){return l.xyErrM<=3;}).length;
+  var lt6M  = psoLogs.filter(function(l){return l.xyErrM<=6;}).length;
+  var lt10M = psoLogs.filter(function(l){return l.xyErrM<=10;}).length;
+  var lt3R  = psoLogs.filter(function(l){return l.xyErrR<=3;}).length;
+  var lt6R  = psoLogs.filter(function(l){return l.xyErrR<=6;}).length;
+  var lt10R = psoLogs.filter(function(l){return l.xyErrR<=10;}).length;
+
+  document.getElementById('pso-acc-m').textContent     = ((okM/t)*100).toFixed(1)+'%';
+  document.getElementById('pso-acc-r').textContent     = ((okR/t)*100).toFixed(1)+'%';
   document.getElementById('pso-avg-err-m').textContent = avgErrM+' m';
   document.getElementById('pso-avg-err-r').textContent = avgErrR+' m';
-  document.getElementById('pso-lt4-m').textContent   = lt4M+'/'+t+' PR';
-  document.getElementById('pso-lt4-r').textContent   = lt4R+'/'+t+' PR';
-  document.getElementById('pso-count').textContent    = t+' Particles';
+  document.getElementById('pso-lt3-m').textContent     = lt3M+'/'+t;
+  document.getElementById('pso-lt6-m').textContent     = lt6M+'/'+t;
+  document.getElementById('pso-lt10-m').textContent    = lt10M+'/'+t;
+  document.getElementById('pso-lt3-r').textContent     = lt3R+'/'+t;
+  document.getElementById('pso-lt6-r').textContent     = lt6R+'/'+t;
+  document.getElementById('pso-lt10-r').textContent    = lt10R+'/'+t;
+  document.getElementById('pso-count').textContent     = t+' Particles';
 
-  // Converge chart
-  mkChart('psoConvergeChart',{type:'line',data:{labels:psoIterAvg.map(function(_,i){return 'Iter '+(i+1);}),datasets:[
-    {label:'Avg Fitness',data:psoIterAvg,borderColor:'#a855f7',backgroundColor:'rgba(168,85,247,0.08)',pointBackgroundColor:'#a855f7',pointRadius:4,fill:true,tension:.35,borderWidth:2}
-  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C}},x:{grid:{display:false},ticks:{color:TICK_C}}}}});
+  // Per-floor avg error breakdown
+  function floorErrHTML(errKey, color){
+    return FLOORS.map(function(fl){
+      var sub = psoLogs.filter(function(l){return l.floor===fl;});
+      if(!sub.length) return '';
+      var avg = (sub.reduce(function(s,l){return s+l[errKey];},0)/sub.length).toFixed(2);
+      var fn = fl.replace('Floor ','');
+      var fpCls = {'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+      return '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px;font-size:11px;">'+
+        '<span class="floor-pill '+(fpCls[fn]||'')+'" style="font-size:9px;padding:1px 6px;">'+fl+'</span>'+
+        '<span style="font-family:var(--mono);color:'+color+'">'+avg+'m</span></span>';
+    }).join('');
+  }
+  document.getElementById('pso-floor-err-m').innerHTML = floorErrHTML('xyErrM','#a855f7');
+  document.getElementById('pso-floor-err-r').innerHTML = floorErrHTML('xyErrR','#10b981');
 
-  // PSO Table
-  var fp={'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
-  var tbody=document.getElementById('pso-table-body'); tbody.innerHTML='';
-  psoLogs.forEach(function(log){
-    var fn=log.floor.replace('Floor ','');
-    var ecM=log.xyErrM<2?'var(--ok)':log.xyErrM<4?'var(--amber)':'var(--err)';
-    var ecR=log.xyErrR<2?'var(--ok)':log.xyErrR<4?'var(--amber)':'var(--err)';
+  // 2 Convergence Charts แยก Meas / RSSI
+  var cOpts = function(data, color){
+    return {type:'line',data:{labels:data.map(function(_,i){return 'k='+(i+1);}),
+      datasets:[{data:data,borderColor:color,
+        backgroundColor:color+'22',pointRadius:2,tension:.35,borderWidth:2,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C}},
+                x:{grid:{display:false},ticks:{color:TICK_C,maxTicksLimit:10}}}}};
+  };
+  mkChart('psoConvergeChartM', cOpts(psoIterAvgM,'#a855f7'));
+  mkChart('psoConvergeChart',  cOpts(psoIterAvg, '#10b981'));
+
+  // Table — แต่ละแถวคลิกที่ Particle ID เพื่อดู Seed PR ที่นำไป PSO
+  window._seedData = window._seedData || {};
+  var fp = {'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+  var tbody = document.getElementById('pso-table-body');
+  tbody.innerHTML = '';
+
+  psoLogs.forEach(function(log, idx){
+    var fn   = log.floor.replace('Floor ','');
+    var ecM  = log.xyErrM<=3?'var(--ok)':log.xyErrM<=6?'var(--amber)':log.xyErrM<=10?'var(--rose)':'var(--err)';
+    var ecR  = log.xyErrR<=3?'var(--ok)':log.xyErrR<=6?'var(--amber)':log.xyErrR<=10?'var(--rose)':'var(--err)';
     var okFM = log.predFloorM===log.floor;
     var okFR = log.predFloorR===log.floor;
-    tbody.innerHTML+=
-      '<tr>'+
+
+    // เก็บ seed data ใน window registry (หลีกเลี่ยง inline JSON ใน attribute)
+    var keyM = 'seed_'+idx+'_M';
+    var keyR = 'seed_'+idx+'_R';
+    window._seedData[keyM] = {
+      title: 'Measurement Seeds — '+log.id,
+      seeds: (log.seedIdsM||[]).map(function(id){
+        var pr=PR_DB.find(function(p){return p.id===id;})||{};
+        return {id:id,floor:pr.floor||'',x:pr.x||0,y:pr.y||0};
+      }),
+      result: {id:log.id,floor:log.floor,gx:log.gxM,gy:log.gyM,err:log.xyErrM.toFixed(2)}
+    };
+    window._seedData[keyR] = {
+      title: 'RSSI Predict Seeds — '+log.id,
+      seeds: (log.seedIdsR||[]).map(function(id){
+        var pr=PR_DB.find(function(p){return p.id===id;})||{};
+        return {id:id,floor:pr.floor||'',x:pr.x||0,y:pr.y||0};
+      }),
+      result: {id:log.id,floor:log.floor,gx:log.gxR,gy:log.gyR,err:log.xyErrR.toFixed(2)}
+    };
+
+    var tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.title = 'คลิกเพื่อดู Particle Seeds';
+    tr.innerHTML =
       '<td><span class="floor-pill '+(fp[fn]||'')+'">'+log.floor+'</span></td>'+
-      '<td style="color:var(--muted)">'+log.id+'</td>'+
+      '<td style="color:var(--purple);font-weight:600;text-decoration:underline dotted;">'+log.id+'</td>'+
       '<td style="color:var(--muted);font-size:10px">'+log.knnFloorM+'</td>'+
       '<td>'+(okFM?'<span class="badge badge-ok">'+log.predFloorM+'</span>':'<span class="badge badge-err">'+log.predFloorM+'</span>')+'</td>'+
-      '<td style="color:var(--muted)">'+log.gxM+', '+log.gyM+'</td>'+
+      '<td style="color:var(--muted);font-size:10px">'+log.gxM+', '+log.gyM+'</td>'+
       '<td style="color:'+ecM+';font-weight:600">'+log.xyErrM.toFixed(2)+'</td>'+
       '<td style="color:var(--muted);font-size:10px">'+log.knnFloorR+'</td>'+
       '<td>'+(okFR?'<span class="badge badge-ok">'+log.predFloorR+'</span>':'<span class="badge badge-err">'+log.predFloorR+'</span>')+'</td>'+
-      '<td style="color:var(--muted)">'+log.gxR+', '+log.gyR+'</td>'+
-      '<td style="color:'+ecR+';font-weight:600">'+log.xyErrR.toFixed(2)+'</td>'+
-      '</tr>';
+      '<td style="color:var(--muted);font-size:10px">'+log.gxR+', '+log.gyR+'</td>'+
+      '<td style="color:'+ecR+';font-weight:600">'+log.xyErrR.toFixed(2)+'</td>';
+
+    // คลิกซ้ายครึ่ง = Meas seeds, คลิกขวาครึ่ง = RSSI seeds
+    tr.addEventListener('click', function(e){
+      var rect = tr.getBoundingClientRect();
+      var isLeft = (e.clientX - rect.left) < rect.width/2;
+      var key = isLeft ? keyM : keyR;
+      var d = window._seedData[key];
+      if(d) window.showSeedPopup(d.title, d.seeds, d.result);
+    });
+    tbody.appendChild(tr);
   });
 
   document.getElementById('pso-results-section').classList.remove('hidden');
   renderMaps();
 }
+
+// ── Seed Popup: แสดง PR ที่นำไป PSO พร้อม gbest result ──
+// expose to window so onclick attributes can call them
+window.showSeedPopup = function showSeedPopup(title, seeds, result){
+  document.getElementById('dev-popup-title').textContent = title;
+  var fp = {'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+  var errColor = result.err<=3?'var(--ok)':result.err<=6?'var(--amber)':'var(--err)';
+  var html =
+    '<div style="background:var(--bg4);border-radius:var(--rs);padding:10px;margin-bottom:12px;font-size:12px;">'+
+    '<span style="color:var(--muted)">Mobile: </span><b style="color:var(--text)">'+result.id+'</b>'+
+    '<span style="color:var(--muted);margin-left:12px;">Floor จริง: </span><b style="color:var(--text)">'+result.floor+'</b>'+
+    '<span style="color:var(--muted);margin-left:12px;">gbest: </span>'+
+    '<span style="font-family:var(--mono);color:var(--blue)">('+result.gx+', '+result.gy+')</span>'+
+    '<span style="color:var(--muted);margin-left:12px;">Error: </span>'+
+    '<span style="font-family:var(--mono);color:'+errColor+'">'+result.err+' m</span>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">PR ที่ถูกนำไปเป็น Seed ใน PSO ('+seeds.length+' ตัว):</div>'+
+    '<table style="width:100%;font-size:12px;border-collapse:collapse;">'+
+    '<thead><tr style="background:var(--bg4);">'+
+    '<th style="padding:5px 10px;color:var(--muted);text-align:left;">Particle ID</th>'+
+    '<th style="padding:5px 10px;color:var(--muted);">Floor</th>'+
+    '<th style="padding:5px 10px;color:var(--blue);">X</th>'+
+    '<th style="padding:5px 10px;color:var(--blue);">Y</th>'+
+    '</tr></thead><tbody>'+
+    seeds.map(function(s){
+      var fn=(s.floor||'').replace('Floor ','');
+      return '<tr style="border-bottom:0.5px solid var(--border);">'+
+        '<td style="padding:5px 10px;font-family:var(--mono);color:var(--purple)">'+s.id+'</td>'+
+        '<td style="padding:5px 10px;"><span class="floor-pill '+(fp[fn]||'')+'">'+s.floor+'</span></td>'+
+        '<td style="padding:5px 10px;font-family:var(--mono);color:var(--blue)">'+s.x+'</td>'+
+        '<td style="padding:5px 10px;font-family:var(--mono);color:var(--blue)">'+s.y+'</td>'+
+        '</tr>';
+    }).join('')+
+    '</tbody></table>';
+  document.getElementById('dev-popup-body').innerHTML = html;
+  document.getElementById('dev-popup-overlay').style.display='block';
+  document.getElementById('dev-popup').style.display='block';
+}
+
+  // 2 Convergence Charts แยก Meas / RSSI
+  var cOpts = function(data, color, label){
+    return {type:'line',data:{labels:data.map(function(_,i){return 'k='+(i+1);}),
+      datasets:[{label:label,data:data,borderColor:color,
+        backgroundColor:color.replace('rgb','rgba').replace(')',',0.08)'),
+        pointRadius:2,tension:.35,borderWidth:2,fill:true}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{y:{beginAtZero:true,grid:{color:GRID_C},ticks:{color:TICK_C}},
+                x:{grid:{display:false},ticks:{color:TICK_C,maxTicksLimit:10}}}}};
+  };
+  mkChart('psoConvergeChartM', cOpts(psoIterAvgM,'#a855f7','Meas. Fitness'));
+  mkChart('psoConvergeChart',  cOpts(psoIterAvg, '#10b981','RSSI Fitness'));
+
+window.showDevPopup = function showDevPopup(title, prList){
+  document.getElementById('dev-popup-title').textContent = title;
+  var fp = {'1':'fp1','2':'fp2','3':'fp3','4':'fp4'};
+  var html = prList.length===0
+    ? '<p style="color:var(--ok);font-size:13px;">✅ ไม่มีที่หลงชั้น</p>'
+    : '<table style="width:100%;font-size:12px;border-collapse:collapse;">'+
+      '<thead><tr style="background:var(--bg4);"><th style="padding:6px 10px;color:var(--muted);text-align:left;">Particle</th>'+
+      '<th style="padding:6px 10px;color:var(--muted);">Floor จริง</th>'+
+      '<th style="padding:6px 10px;color:var(--err);">ทำนายได้</th>'+
+      '<th style="padding:6px 10px;color:var(--amber);">ห่าง</th></tr></thead><tbody>'+
+      prList.map(function(item){
+        var fn=item.actualFloor.replace('Floor ','');
+        return '<tr style="border-bottom:0.5px solid var(--border);">'+
+          '<td style="padding:6px 10px;font-family:var(--mono);color:var(--text)">'+item.id+'</td>'+
+          '<td style="padding:6px 10px;"><span class="floor-pill '+(fp[fn]||'')+'">'+item.actualFloor+'</span></td>'+
+          '<td style="padding:6px 10px;font-family:var(--mono);color:var(--err)">'+item.predicted+'</td>'+
+          '<td style="padding:6px 10px;font-family:var(--mono);color:var(--amber)">'+item.gap+' ชั้น</td></tr>';
+      }).join('')+'</tbody></table>';
+  document.getElementById('dev-popup-body').innerHTML = html;
+  document.getElementById('dev-popup-overlay').style.display='block';
+  document.getElementById('dev-popup').style.display='block';
+}
+
 
 // ── FLOOR MAPS ──
 var mapColors={
@@ -1401,7 +1620,9 @@ setTimeout(renderMaps,200);
     var n       = parseInt(document.getElementById('anim-n').value)||30;
     var K       = parseInt(document.getElementById('anim-k').value)||20;
     var etaInput= parseFloat(document.getElementById('anim-eta').value)||2.2;
-    var fl      = knnPredictFloor(mRSSI, mobile.id);
+    var knnRes  = knnPredictFloor(mRSSI, mobile.id);
+    var fl      = knnRes.floor; // ชั้นที่ KNN ทำนาย
+    var seeds   = knnRes.seeds; // PR ในชั้นนั้น
     var pz      = getZ(fl);
     var nF      = floorsThrough(mobile.id, fl);
     var faf     = nF * FAF_PER_FLOOR;
@@ -1409,10 +1630,9 @@ setTimeout(renderMaps,200);
     var eta     = etaInput;
     var scX=36, scY=27;
 
-    // Build initial particles: seed from floor PRs + random fill
-    var flPRs = PR_DB.filter(function(p){return p.floor===fl;});
+    // Build initial particles: seed จาก PR ในชั้นที่ KNN ทำนายเท่านั้น
     var particles = [];
-    flPRs.forEach(function(s){
+    seeds.forEach(function(s){
       particles.push({x:s.x+rand(-2,2),y:s.y+rand(-2,2),z:pz,
         eta:eta+rand(-0.3,0.3),vx:0,vy:0,bx:s.x,by:s.y,bc:Infinity});
     });
@@ -1435,6 +1655,7 @@ setTimeout(renderMaps,200);
     animState.faf = faf;
     animState.mRSSI = mRSSI;
     animState.floor = fl;
+    animState.seeds = seeds;
     animState.K = K;
     animState.wmin = 0.4; animState.wmax = 0.9;
     animState.c1 = 2.0;   animState.c2 = 2.0;
@@ -1451,7 +1672,7 @@ setTimeout(renderMaps,200);
     document.getElementById('anim-btn-prev').disabled = false;
     document.getElementById('anim-iter-total').textContent = K;
     document.getElementById('anim-floor-label').textContent =
-      'KNN → '+fl+' | '+mobile.id+' | '+animState.rssiMode.toUpperCase();
+      'KNN → '+fl+' | '+mobile.id+' | mode: '+animState.rssiMode.toUpperCase()+' | seed: '+seeds.length+' PR';
   }
 
   function recordSnapshot(k){
